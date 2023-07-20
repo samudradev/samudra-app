@@ -2,6 +2,8 @@
 
 Pembangunan antaramuka Samudra menggunakan [Tauri](https://tauri.app/) dan [Svelte](https://svelte.dev/)
 
+![](./samudra.gif)
+
 ## Fitur
 Buat masa ini, hanya mampu queri data lemma dan dipulangkan lemma + konsep sahaja.
 
