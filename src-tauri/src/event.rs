@@ -35,19 +35,12 @@ fn handle_database_registration(event: WindowMenuEvent) -> () {
                         path: folder.join("samudra.db").to_str().unwrap().to_string(),
                         ..Default::default()
                     },
-                );
-                match (
-                    conf.set_active(name),
-                    conf.to_toml(manager.state::<AppPaths>().config_home.as_path()),
-                ) {
-                    (Ok(_), Ok(())) => (),
-                    (Err(e), _) => {
-                        dbg!(e);
-                    }
-                    (_, Err(e)) => {
-                        dbg!(e);
-                    }
-                };
+                )
+                .unwrap();
+                conf.set_active(name)
+                    .unwrap()
+                    .to_toml(manager.state::<AppPaths>().config_home.as_path())
+                    .unwrap();
             }
             None => {}
         });

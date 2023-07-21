@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use tauri::api::path;
 
-use database::DatabaseConfig;
+use database::{DatabaseConfig, DatabaseConnection};
 
 #[derive(Debug)]
 pub struct AppPaths {
@@ -53,13 +53,27 @@ impl AppConfig {
         Ok(())
     }
 
-    pub fn register_database(&self, name: String, database: DatabaseConfig) {
-        dbg!(self.databases.lock().unwrap()).insert(name, database);
+    pub fn register_database(
+        &self,
+        name: String,
+        database: DatabaseConfig,
+    ) -> Result<(), tauri::Error> {
+        self.databases
+            .lock()
+            .unwrap()
+            .insert(name, database.clone());
+
+        tauri::async_runtime::block_on(async move {
+            if let DatabaseConnection::Disconnected = database.connect().await {
+                database.create_and_migrate().await.unwrap();
+            }
+        });
+        Ok(())
     }
 
     pub fn set_active(&self, name: String) -> Result<&Self, String> {
         match self.databases.lock().unwrap().get(&name) {
-            Some(database) => {
+            Some(_database) => {
                 *self.active.lock().unwrap() = name.into();
                 Ok(self)
             }
