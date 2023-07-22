@@ -39,6 +39,9 @@ macro_rules! export {
                     $(
                         $field: value.$field,
                     )*
+                    $($(
+                        $optfield: value.$optfield.into(),
+                    )*)?
                     $(
                         $new_field: <$renamed>::from(value.$old_field.unwrap()),
                     )*

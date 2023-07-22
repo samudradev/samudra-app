@@ -1,6 +1,5 @@
 <script lang="ts">
 	import Query from '../lib/Query.svelte';
-	import { goto } from '$app/navigation';
 </script>
 
 <head>
@@ -12,7 +11,6 @@
 		<div class="column">
 			<h1 class="text-3xl font-bold py-10">Samudra</h1>
 			<Query />
-			<button on:click={() => goto('/new')}>New</button>
 		</div>
 	</div>
 </main>

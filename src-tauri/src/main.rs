@@ -17,6 +17,9 @@ use database::query::Query;
 use database::DatabaseConnection;
 
 // TODO Expose database path to frontend
+// TODO Show database statistic
+// TODO Import from CSV
+// TODO Show config
 
 #[tauri::command(async)]
 async fn get(config: State<'_, AppConfig>, lemma: &str) -> Result<Vec<LemmaData>, String> {

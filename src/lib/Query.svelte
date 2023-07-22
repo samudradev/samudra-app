@@ -1,14 +1,12 @@
 <script lang="ts">
 	import { invoke } from '@tauri-apps/api/tauri';
 	import Datacard from './Datacard.svelte';
-	import type { SamudraData } from '../dataclasses/SamudraData';
+	import type { LemmaData } from '../bindings/LemmaData';
 
 	let name: string | null = null;
-	let konsep: string | null = null;
-	let data: SamudraData[] = [];
+	let data: LemmaData[] = [];
 
 	async function greet() {
-		// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 		data = await invoke('get', { lemma: name });
 	}
 </script>
@@ -21,16 +19,10 @@
 			placeholder="Lemma"
 			class="input input-primary w-full max-w-xs"
 		/>
-		<!-- <input
-			bind:value={konsep}
-			id="greet-input"
-			placeholder="Konsep"
-			class="input input-primary w-full max-w-xs"
-		/> -->
 		<button type="submit" class="btn btn-primary"><i class="gg-search" /></button>
 	</form>
 	{#each data as d}
-		<Datacard data={d} single={false} />
+		<Datacard data={d} />
 	{/each}
 </div>
 
