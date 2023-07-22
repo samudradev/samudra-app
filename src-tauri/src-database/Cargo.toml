@@ -10,3 +10,4 @@ chrono = { version = "0.4.26", features = ["serde"] }
 sea-orm = { version = "0.11.3", default-features = false, features = ["chrono", "runtime-tokio-rustls", "sqlx-sqlite", "macros", "with-chrono"] }
 serde = { version = "1.0.173", features = ["derive"] }
 sqlx = { version = "0.6.1", features = ["runtime-tokio-rustls", "sqlite", "chrono", "macros"] }
+ts-rs = "6.2.1"

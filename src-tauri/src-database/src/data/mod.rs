@@ -9,7 +9,11 @@
 
 #[macro_use]
 mod export;
-use serde::{Deserialize, Serialize}; // Required for the export! macro to work
+
+// Required for the export! macro to work
+use serde::{Deserialize, Serialize};
+use ts_rs::TS;
+// ---
 
 use crate::models::cakupan::Model as Cakupan;
 use crate::models::golongan_kata::Model as GolonganKata;
@@ -18,45 +22,63 @@ use crate::models::konsep::Model as Konsep;
 use crate::models::lemma::Model as Lemma;
 
 export! {
-    LemmaData from Lemma {
-    id: i32,
-    nama: String;
-    konseps: Konsep => ..KonsepData
+    LemmaData from Lemma with
+    {
+        id: i32,
+        nama: String;
+        attachment {
+        konseps: Konsep => ..KonsepData
+        }
     }
 }
 
 export! {
-    KonsepData from Konsep {
-    id: i32,
-    // TODO This has different field from Konsep.golongan_id
-    // golongan_kata: GolonganKataData,
-    keterangan: Option<String>,
-    tertib: Option<i32>;
-    cakupan: Cakupan => ..CakupanData,
-    kata_asing: KataAsing => ..KataAsingData
+    KonsepData from Konsep with {
+    id: i32;
+    rename golongan_id to golongan_kata: GolonganKataData;
+    optional {
+        keterangan: String,
+        tertib: i32
+    };
+    attachment {
+        cakupan: Cakupan => ..CakupanData,
+        kata_asing: KataAsing => ..KataAsingData
+    }
     }
 }
 
 export! {
-    GolonganKataData from GolonganKata {
-        id: String,
+    CakupanData from Cakupan with {
+        id: i32,
+        nama: String;
+        optional {
+            keterangan: String
+        }
+    }
+}
+
+export! {
+    KataAsingData from KataAsing with {
+        id: i32,
         nama: String,
-        keterangan: String;
+        bahasa: String
+    }
+}
+export! {
+    GolonganKataData from GolonganKata with {
+        id: String;
+        optional {
+            nama: String,
+            keterangan: String
+        }
     }
 }
 
-export! {
-    CakupanData from Cakupan {
-    id: i32,
-    nama: String,
-    keterangan: Option<String>;
-    }
-}
-
-export! {
-    KataAsingData from KataAsing {
-    id: i32,
-    nama: String,
-    bahasa: String;
+impl From<String> for GolonganKataData {
+    fn from(value: String) -> Self {
+        GolonganKataData {
+            id: value,
+            ..Default::default()
+        }
     }
 }

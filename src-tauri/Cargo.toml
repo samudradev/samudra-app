@@ -28,6 +28,10 @@ toml = "0.7.6"
 chrono = { version = "0.4.26", features = ["serde"] }
 database = { path = "src-database", package = "src-database" }
 
+[[test]]
+name = "test_database"
+path = "src-database/src/lib.rs"
+
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem
 # DO NOT REMOVE!!
