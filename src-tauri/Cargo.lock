@@ -3014,6 +3014,7 @@ dependencies = [
  "sea-orm",
  "serde",
  "sqlx",
+ "ts-rs",
 ]
 
 [[package]]
