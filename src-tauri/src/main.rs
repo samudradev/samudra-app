@@ -16,10 +16,14 @@ use database::data::LemmaData;
 use database::query::Query;
 use database::DatabaseConnection;
 
-// TODO Expose database path to frontend
 // TODO Show database statistic
 // TODO Import from CSV
 // TODO Show config
+
+#[tauri::command]
+fn active_database_url(config: State<'_, AppConfig>) -> String {
+    config.get_active_database().full_url()
+}
 
 #[tauri::command(async)]
 async fn get(config: State<'_, AppConfig>, lemma: &str) -> Result<Vec<LemmaData>, String> {
@@ -43,10 +47,7 @@ async fn main() {
         .on_menu_event(event::on_menu_event)
         .manage(appstate::AppPaths::default())
         .manage(appstate::AppConfig::default())
-        .invoke_handler(tauri::generate_handler![
-            get //     command::search,
-                //     command::get_lemma
-        ])
+        .invoke_handler(tauri::generate_handler![get, active_database_url])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

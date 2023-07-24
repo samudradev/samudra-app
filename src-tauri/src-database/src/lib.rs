@@ -19,6 +19,12 @@ pub struct DatabaseConfig {
 }
 
 impl DatabaseConfig {
+    pub fn full_url(&self) -> String {
+        match &self.engine {
+            DatabaseEngine::SQLite => format!("sqlite:{}", self.path),
+        }
+    }
+
     pub async fn connect(&self) -> DatabaseConnection {
         match self.engine {
             DatabaseEngine::SQLite => Database::connect(format!("sqlite:{}", self.path))
@@ -30,7 +36,7 @@ impl DatabaseConfig {
     pub async fn create_and_migrate(&self) -> Result<(), Error> {
         match &self.engine {
             DatabaseEngine::SQLite => {
-                let url = format!("sqlite:{}", self.path);
+                let url = self.full_url();
                 Sqlite::create_database(&url).await?;
                 let pool = SqlitePool::connect(&url).await?;
                 sqlx::migrate!().run(&pool).await?;
