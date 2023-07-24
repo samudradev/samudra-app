@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { invoke } from '@tauri-apps/api/tauri';
+	import { listen } from '@tauri-apps/api/event';
 	import { onMount } from 'svelte';
 
 	import Query from '../lib/Query.svelte';
@@ -9,6 +10,12 @@
 	onMount(async () => {
 		database_url = await invoke('active_database_url');
 	});
+	const changeEvent = async () => {
+		await listen('active_database_changed', async () => {
+			database_url = await invoke('active_database_url');
+		});
+	};
+	changeEvent();
 </script>
 
 <head>

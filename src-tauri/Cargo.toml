@@ -11,9 +11,6 @@ edition = "2021"
 [workspace]
 members = [".", "src-database"]
 
-[build]
-rustflags = ["-C", "link-arg=-fuse-ld=lld"]
-
 [build-dependencies]
 tauri-build = { version = "1.3", features = [] }
 

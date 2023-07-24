@@ -39,8 +39,12 @@ fn handle_database_registration(event: WindowMenuEvent) -> () {
                 .unwrap();
                 conf.set_active(name)
                     .unwrap()
-                    .to_toml(manager.state::<AppPaths>().config_home.as_path())
+                    .to_toml(&manager.state::<AppPaths>().config_home.as_path())
                     .unwrap();
+                manager
+                    .get_focused_window()
+                    .unwrap()
+                    .emit_and_trigger("active_database_changed", "");
             }
             None => {}
         });
