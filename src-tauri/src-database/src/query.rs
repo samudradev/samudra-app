@@ -1,9 +1,8 @@
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 
-use crate::{
-    data::LemmaData,
-    models::{self, prelude::*},
-};
+use crate::data::LemmaData;
+use crate::models;
+use crate::models::prelude::*;
 
 #[derive(Default)]
 pub struct Query {

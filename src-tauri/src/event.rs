@@ -44,7 +44,8 @@ fn handle_database_registration(event: WindowMenuEvent) -> () {
                 manager
                     .get_focused_window()
                     .unwrap()
-                    .emit_and_trigger("active_database_changed", "");
+                    .emit_and_trigger("active_database_changed", "")
+                    .unwrap();
             }
             None => {}
         });

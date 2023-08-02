@@ -6,7 +6,7 @@ pub mod query;
 
 pub use sea_orm::DatabaseConnection;
 
-use sea_orm::Database;
+use sea_orm::{ColumnTrait, Database, EntityTrait, QuerySelect};
 use serde::{Deserialize, Serialize};
 use sqlx::error::Error;
 use sqlx::migrate::MigrateDatabase;
@@ -23,6 +23,18 @@ impl DatabaseConfig {
         match &self.engine {
             DatabaseEngine::SQLite => format!("sqlite:{}", self.path),
         }
+    }
+
+    pub async fn count_lemma(&self) -> sqlx::Result<()> {
+        use models::lemma::Entity as Lemma;
+
+        let pool = SqlitePool::connect(&self.full_url()).await?;
+
+        let res = sqlx::query!("SELECT count(lemma.id) as count from lemma")
+            .fetch_one(&pool)
+            .await;
+        dbg!(res?);
+        Ok(())
     }
 
     pub async fn connect(&self) -> DatabaseConnection {

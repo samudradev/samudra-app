@@ -16,13 +16,20 @@ use database::data::LemmaData;
 use database::query::Query;
 use database::DatabaseConnection;
 
-// TODO Show database statistic
 // TODO Import from CSV
 // TODO Show config
 
 #[tauri::command]
 fn active_database_url(config: State<'_, AppConfig>) -> String {
     config.get_active_database().full_url()
+}
+
+// CURRENT TASK
+// TODO Show database statistic
+#[tauri::command(async)]
+async fn count_lemma(config: State<'_, AppConfig>) -> Result<(), String> {
+    dbg!(config.get_active_database().count_lemma().await.unwrap());
+    Ok(())
 }
 
 #[tauri::command(async)]
@@ -47,7 +54,11 @@ async fn main() {
         .on_menu_event(event::on_menu_event)
         .manage(appstate::AppPaths::default())
         .manage(appstate::AppConfig::default())
-        .invoke_handler(tauri::generate_handler![get, active_database_url])
+        .invoke_handler(tauri::generate_handler![
+            get,
+            active_database_url,
+            count_lemma
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

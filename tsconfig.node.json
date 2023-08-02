@@ -1,9 +1,11 @@
 {
-	"compilerOptions": {
-		"composite": true,
-		"module": "ESNext",
-		"moduleResolution": "Node"
-	},
-	"include": ["vite.config.ts"],
-	"extends": "./.svelte-kit/tsconfig.json"
+  "compilerOptions": {
+    "composite": true,
+    "skipLibCheck": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler"
+  },
+  "include": [
+    "vite.config.ts"
+  ]
 }
