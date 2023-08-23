@@ -5,7 +5,6 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use tauri::api::path;
-use tauri::{AppHandle, Manager};
 
 use database::{DatabaseConfig, DatabaseConnection};
 

@@ -43,7 +43,7 @@ macro_rules! export {
                         $optfield: value.$optfield.into(),
                     )*)?
                     $(
-                        $new_field: <$renamed>::from(value.$old_field.unwrap()),
+                        $new_field: <$renamed>::from(value.$old_field.unwrap_or("undefined".to_string())),
                     )*
                     ..Default::default()
                 }

@@ -22,28 +22,27 @@ use crate::models::konsep::Model as Konsep;
 use crate::models::lemma::Model as Lemma;
 
 export! {
-    LemmaData from Lemma with
-    {
+    LemmaData from Lemma with {
         id: i32,
         nama: String;
         attachment {
-        konseps: Konsep => ..KonsepData
+            konseps: Konsep => ..KonsepData
         }
     }
 }
 
 export! {
     KonsepData from Konsep with {
-    id: i32;
-    rename golongan_id to golongan_kata: GolonganKataData;
-    optional {
-        keterangan: String,
-        tertib: i32
-    };
-    attachment {
-        cakupan: Cakupan => ..CakupanData,
-        kata_asing: KataAsing => ..KataAsingData
-    }
+        id: i32;
+        rename golongan_id to golongan_kata: GolonganKataData;
+        optional {
+            keterangan: String,
+            tertib: i32
+        };
+        attachment {
+            cakupan: Cakupan => ..CakupanData,
+            kata_asing: KataAsing => ..KataAsingData
+        }
     }
 }
 

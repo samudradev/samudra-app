@@ -1,12 +1,13 @@
 //! A crate to handle database operations.
 
 pub mod data;
+pub mod io;
 mod models;
 pub mod query;
 
 pub use sea_orm::DatabaseConnection;
 
-use sea_orm::{ColumnTrait, Database, EntityTrait, QuerySelect};
+use sea_orm::Database;
 use serde::{Deserialize, Serialize};
 use sqlx::error::Error;
 use sqlx::migrate::MigrateDatabase;
@@ -26,8 +27,6 @@ impl DatabaseConfig {
     }
 
     pub async fn count_lemma(&self) -> sqlx::Result<()> {
-        use models::lemma::Entity as Lemma;
-
         let pool = SqlitePool::connect(&self.full_url()).await?;
 
         let res = sqlx::query!("SELECT count(lemma.id) as count from lemma")
