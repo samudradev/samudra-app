@@ -17,7 +17,6 @@ use database::data::LemmaData;
 use database::query::Query;
 use database::DatabaseConnection;
 
-// TODO Import from CSV
 // TODO Show config
 
 #[tauri::command]
@@ -25,7 +24,6 @@ fn active_database_url(config: State<'_, AppConfig>) -> String {
     config.get_active_database().full_url()
 }
 
-// CURRENT TASK
 // TODO Show database statistic
 #[tauri::command(async)]
 async fn count_lemma(config: State<'_, AppConfig>) -> Result<(), String> {
