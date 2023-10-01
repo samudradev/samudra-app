@@ -10,6 +10,8 @@ mod event;
 mod menu;
 
 use appstate::AppConfig;
+use tauri::api::dialog::MessageDialogBuilder;
+use tauri::api::dialog::MessageDialogKind;
 use tauri::State;
 
 use database;
@@ -31,6 +33,28 @@ async fn count_lemma(config: State<'_, AppConfig>) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command(async)]
+async fn insert_single_value(config: State<'_, AppConfig>, lemma: String, konsep: String) -> Result<(), String> {
+    match config.get_active_database().connect().await {
+        DatabaseConnection::Disconnected => {
+            let msg = format!("{} does not exist.", &config.get_active_database().path);
+            Err(dbg!(msg))
+        }
+        conn => {
+            match (database::io::RowValue{ lemma, konsep}).insert(&conn).await
+            {
+                Ok(msg) => MessageDialogBuilder::new("Success!".to_string(), "Success".to_string())
+                .kind(MessageDialogKind::Info)
+                .show(|_a| {}),
+                Err(e) => MessageDialogBuilder::new("Failure!".to_string(), e.to_string())
+                .kind(MessageDialogKind::Error)
+                .show(|_a| {}),
+            }
+            Ok(())
+        }
+    }
+}
+
 /// Import data from a csv file.
 ///
 /// The csv is expected to be delimited with a pipe (`|`) to avoid conflict with the use of comma in a sentence.
@@ -49,14 +73,21 @@ async fn import_from_csv(config: State<'_, AppConfig>, path: String) -> Result<(
             Err(dbg!(msg))
         }
         conn => {
-            database::io::import_from_csv(
-                dbg!(&std::path::Path::new(&path)),
+            match database::io::import_from_csv(
+                &std::path::Path::new(&path),
                 Some(b'|'),
                 Some(b'\n'),
                 dbg!(&conn),
             )
             .await
-            .unwrap();
+            {
+                Ok(msg) => MessageDialogBuilder::new("Success!".to_string(), msg)
+                    .kind(MessageDialogKind::Info)
+                    .show(|_a| {}),
+                Err(e) => MessageDialogBuilder::new("Failure!".to_string(), e.to_string())
+                    .kind(MessageDialogKind::Error)
+                    .show(|_a| {}),
+            }
             Ok(())
         }
     }
@@ -88,7 +119,8 @@ async fn main() {
             get,
             active_database_url,
             count_lemma,
-            import_from_csv
+            import_from_csv,
+            insert_single_value
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
