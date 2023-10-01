@@ -68,7 +68,10 @@ impl Related<super::kata_asing::Entity> for Entity {
 
 #[async_trait]
 impl ActiveModelBehavior for ActiveModel {
-    async fn before_save<C>(self, db: &C, _insert: bool) -> Result<Self, DbErr>
+}
+
+impl ActiveModel {
+    pub async fn check<C>(self, db: &C) -> Result<Self, DbErr>
     where
         C: ConnectionTrait,
     {
@@ -76,16 +79,17 @@ impl ActiveModelBehavior for ActiveModel {
             .filter(Column::LemmaId.eq(self.clone().lemma_id.into_value().unwrap()))
             .all(db)
             .await?;
-        if w_existing_lemma.len() != 0 {
+        if dbg! { w_existing_lemma.len() != 0 } {
             let lemma_id_val = self.keterangan.clone().into_value().unwrap().to_string();
             for model in w_existing_lemma {
                 if model.keterangan.eq(&Some(lemma_id_val.clone())) {
-                    return Ok(model.into());
+                    return dbg! { Ok(model.into()) };
                 }
             }
-            Ok(self)
+            dbg! { Ok(self) }
         } else {
-            Ok(self)
+            dbg! { Ok(self) }
         }
     }
+
 }

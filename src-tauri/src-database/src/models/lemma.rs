@@ -29,9 +29,13 @@ impl Related<super::konsep::Entity> for Entity {
 
 #[async_trait]
 impl ActiveModelBehavior for ActiveModel {
-    async fn before_save<C>(self, db: &C, _insert: bool) -> Result<Self, DbErr>
-    where
-        C: ConnectionTrait,
+
+}
+
+impl ActiveModel {
+    pub async fn check<C>(self, db: &C) -> Result<Self, DbErr>
+        where
+            C: ConnectionTrait,
     {
         match self::Entity::find()
             .filter(Column::Nama.eq(self.nama.clone().into_value().unwrap()))

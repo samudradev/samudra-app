@@ -1,12 +1,43 @@
-use sea_orm::{ActiveModelTrait, ActiveValue, DatabaseConnection};
+use sea_orm::error::RuntimeErr;
+use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, DatabaseConnection, DbErr, EntityOrSelect, EntityTrait, ModelTrait, QueryFilter, TryIntoModel};
 use serde::{Deserialize, Serialize};
+use sqlx::error::Error as SqlxError;
+use sqlx::sqlite::SqliteError;
+use std::error::Error;
 
 use crate::models;
 
 #[derive(Debug, Serialize, Deserialize)]
-struct RowValue {
-    lemma: String,
-    konsep: String,
+pub struct RowValue {
+    pub lemma: String,
+    pub konsep: String,
+}
+
+impl RowValue {
+    pub async fn insert(&self, db: &DatabaseConnection) -> Result<(), DbErr> {
+        let lemma_am = models::lemma::ActiveModel {
+            nama: ActiveValue::Set(self.lemma.to_owned()),
+            ..Default::default()
+        };
+        let lemma = match lemma_am.clone().check(db).await {
+            Err(e) => todo!(),
+            Ok(am) => {
+                match am.id {
+                    ActiveValue::Unchanged(_) => am.try_into_model()?,
+                    ActiveValue::NotSet => am.insert(db).await?,
+                    _ => todo!()
+                }
+            }
+        };
+        let konsep = models::konsep::ActiveModel {
+            lemma_id: ActiveValue::Set(lemma.id),
+            golongan_id: ActiveValue::Set(None),
+            keterangan: ActiveValue::Set(Some(self.konsep.to_owned())),
+            ..Default::default()
+        };
+        konsep.check(db).await?.insert(db).await?;
+        Ok(())
+    }
 }
 
 fn read_csv(
@@ -33,21 +64,13 @@ pub async fn import_from_csv(
     delimiter: Option<u8>,
     terminator: Option<u8>,
     db: &DatabaseConnection,
-) -> Result<(), sea_orm::DbErr> {
+) -> Result<String, DbErr> {
+    let mut count: i128 = 0;
     let data = dbg!(read_csv(path, delimiter, terminator).unwrap());
-    for d in data.iter() {
-        let lemma = models::lemma::ActiveModel {
-            nama: ActiveValue::Set(d.lemma.to_owned()),
-            ..Default::default()
-        };
-        let lemma = lemma.insert(db).await?;
-        let konsep = models::konsep::ActiveModel {
-            lemma_id: ActiveValue::Set(lemma.id),
-            golongan_id: ActiveValue::Set(None),
-            keterangan: ActiveValue::Set(Some(d.konsep.to_owned())),
-            ..Default::default()
-        };
-        konsep.insert(db).await?;
-    }
-    Ok(())
+    for d in data.iter() {d.insert(db).await?; count += 1 };
+    Ok(format!(
+        "{} items imported from {}.",
+        count,
+        path.as_os_str().to_str().unwrap()
+    ))
 }
