@@ -80,9 +80,9 @@ impl ActiveModel {
             .all(db)
             .await?;
         if dbg! { w_existing_lemma.len() != 0 } {
-            let lemma_id_val = self.keterangan.clone().into_value().unwrap().to_string();
+            let lemma_id_val = String::from(self.keterangan.clone().into_value().unwrap().to_string().strip_suffix("'").unwrap().strip_prefix("'").unwrap());
             for model in w_existing_lemma {
-                if model.keterangan.eq(&Some(lemma_id_val.clone())) {
+                if dbg!{ &model.keterangan }  == dbg! {&Some(lemma_id_val.clone()) } {
                     return dbg! { Ok(model.into()) };
                 }
             }

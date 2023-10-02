@@ -35,7 +35,15 @@ impl RowValue {
             keterangan: ActiveValue::Set(Some(self.konsep.to_owned())),
             ..Default::default()
         };
-        konsep.check(db).await?.insert(db).await?;
+        match konsep.check(db).await {
+            Err(e) => todo!(),
+            Ok(am) => {
+                match am.id {
+                    ActiveValue::Unchanged(_) => am.try_into_model()?,
+                    ActiveValue::NotSet => am.insert(db).await?,
+                    _ => todo!()
+                } }
+        };
         Ok(())
     }
 }
