@@ -5,6 +5,7 @@ use sea_orm::prelude::async_trait::async_trait;
 use sea_orm::sea_query::Mode;
 use sea_orm::{EntityOrSelect, IntoActiveModel};
 use serde::{Deserialize, Serialize};
+use crate::CheckDuplicateTrait;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
 #[sea_orm(table_name = "lemma")]
@@ -32,8 +33,9 @@ impl ActiveModelBehavior for ActiveModel {
 
 }
 
-impl ActiveModel {
-    pub async fn check<C>(self, db: &C) -> Result<Self, DbErr>
+#[async_trait]
+impl CheckDuplicateTrait<Entity> for ActiveModel {
+    async fn check<C>(self, db: &C) -> Result<Self, DbErr>
         where
             C: ConnectionTrait,
     {

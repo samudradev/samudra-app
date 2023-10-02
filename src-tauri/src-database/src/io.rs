@@ -6,6 +6,7 @@ use sqlx::sqlite::SqliteError;
 use std::error::Error;
 
 use crate::models;
+use crate::CheckDuplicateTrait;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RowValue {
@@ -19,31 +20,14 @@ impl RowValue {
             nama: ActiveValue::Set(self.lemma.to_owned()),
             ..Default::default()
         };
-        let lemma = match lemma_am.clone().check(db).await {
-            Err(e) => todo!(),
-            Ok(am) => {
-                match am.id {
-                    ActiveValue::Unchanged(_) => am.try_into_model()?,
-                    ActiveValue::NotSet => am.insert(db).await?,
-                    _ => todo!()
-                }
-            }
-        };
+        let lemma = lemma_am.clone().insert_with_check(models::lemma::Column::Id, db).await?;
         let konsep = models::konsep::ActiveModel {
             lemma_id: ActiveValue::Set(lemma.id),
             golongan_id: ActiveValue::Set(None),
             keterangan: ActiveValue::Set(Some(self.konsep.to_owned())),
             ..Default::default()
         };
-        match konsep.check(db).await {
-            Err(e) => todo!(),
-            Ok(am) => {
-                match am.id {
-                    ActiveValue::Unchanged(_) => am.try_into_model()?,
-                    ActiveValue::NotSet => am.insert(db).await?,
-                    _ => todo!()
-                } }
-        };
+        konsep.clone().insert_with_check(models::konsep::Column::Id, db).await?;
         Ok(())
     }
 }

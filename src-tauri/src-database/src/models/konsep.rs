@@ -3,6 +3,7 @@
 use sea_orm::entity::prelude::*;
 use sea_orm::prelude::async_trait::async_trait;
 use serde::{Deserialize, Serialize};
+use crate::CheckDuplicateTrait;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
 #[sea_orm(table_name = "konsep")]
@@ -70,8 +71,9 @@ impl Related<super::kata_asing::Entity> for Entity {
 impl ActiveModelBehavior for ActiveModel {
 }
 
-impl ActiveModel {
-    pub async fn check<C>(self, db: &C) -> Result<Self, DbErr>
+#[async_trait]
+impl CheckDuplicateTrait<Entity> for ActiveModel {
+    async fn check<C>(self, db: &C) -> Result<Self, DbErr>
     where
         C: ConnectionTrait,
     {

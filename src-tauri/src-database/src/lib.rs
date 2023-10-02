@@ -7,7 +7,9 @@ pub mod query;
 
 pub use sea_orm::DatabaseConnection;
 
-use sea_orm::Database;
+use sea_orm::{ActiveModelBehavior, ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, Database, DbErr, EntityTrait, IntoActiveModel, ModelTrait, TryIntoModel};
+use sea_orm::prelude::async_trait::async_trait;
+use sea_orm::sea_query::ValueTuple;
 use serde::{Deserialize, Serialize};
 use sqlx::error::Error;
 use sqlx::migrate::MigrateDatabase;
@@ -62,4 +64,24 @@ impl DatabaseConfig {
 pub enum DatabaseEngine {
     #[default]
     SQLite,
+}
+
+#[async_trait]
+trait CheckDuplicateTrait<E>: ActiveModelTrait<Entity=E> + ActiveModelBehavior + TryIntoModel<E::Model> + Sync + Send where E: EntityTrait {
+
+    async fn check<C>(self, db: &C) -> Result<Self, DbErr> where C: ConnectionTrait;
+
+    async fn insert_with_check<C>(&self, key: <E as EntityTrait>::Column, db: &C) -> Result<E::Model, DbErr>
+        where  <E as EntityTrait>::Model: IntoActiveModel<Self>, C: ConnectionTrait {
+        match self.clone().check(db).await {
+            Err(e) => todo!(),
+            Ok(am) => {
+                match am.get(key) {
+                    ActiveValue::Unchanged(_) => Ok(am.try_into_model()?),
+                    ActiveValue::NotSet => Ok(am.insert(db).await?),
+                    _ => todo!()
+                }
+            }
+        }
+    }
 }
