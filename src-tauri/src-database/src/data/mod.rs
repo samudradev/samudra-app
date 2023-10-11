@@ -11,8 +11,6 @@
 mod export;
 
 // Required for the export! macro to work
-use serde::{Deserialize, Serialize};
-use ts_rs::TS;
 pub use diff::Diff;
 // ---
 

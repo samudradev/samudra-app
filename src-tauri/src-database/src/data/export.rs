@@ -17,7 +17,7 @@ macro_rules! export {
             })?
     }
     } => {
-        #[derive(Debug, PartialEq, Serialize, Deserialize, Default, TS, Diff)]
+        #[derive(Debug, PartialEq, serde::Serialize, serde::Deserialize, Default, ts_rs::TS, diff::Diff)]
         #[ts(export, export_to="../../src/bindings/")]
         #[diff(attr(
             #[derive(Debug)]
