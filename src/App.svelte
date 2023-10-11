@@ -1,8 +1,17 @@
 <script lang="ts">
   import Footer from "./lib/Footer.svelte";
-  import Greet from "./lib/Greet.svelte";
+  import SearchBar from "./lib/SearchBar.svelte";
   import { open } from "@tauri-apps/api/dialog";
   import { invoke } from "@tauri-apps/api";
+
+  import LemmaStore from "./Data.js";
+  import DataCard from "./lib/Datacard.svelte";
+
+  let data: LemmaData[] = [];
+
+  LemmaStore.subscribe((value) => {
+    data = value;
+  })
 
   async function import_csv() {
     let selected = await open({
@@ -19,11 +28,20 @@
   }
 </script>
 
-<main class="container">
-  <h1>Samudra</h1>
-  <div class="row">
-    <Greet />
+<main>
+  <hero class="hero min-h-200 bg-base-200 pt-10 pb-5">
+    <div class="hero-content text-center">
+      <div class="max-w-md">
+        <h1 class="text-5xl font-bold pb-10">Samudra</h1>
+        <SearchBar />
+      </div>
+    </div>
+  </hero>
+  <div class="justify-center grid">
+  {#each data as d}
+    <DataCard data={d} />
+  {/each}
   </div>
-  <button on:click={import_csv}>Import from CSV</button>
+<!--  <button on:click={import_csv}>Import from CSV</button>-->
   <Footer />
 </main>
