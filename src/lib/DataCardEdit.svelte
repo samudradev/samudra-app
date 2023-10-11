@@ -45,7 +45,7 @@
         <div class="grid w-full grid-flow-row-dense grid-cols-4 grid-rows-1">
 <!--            <h2 class="">{data.nama}</h2>-->
             <input type="text" bind:value={data.nama} class="input input-bordered w-full max-w-xs card-title col-span-3" />
-            <button class="btn btn-ghost btn-xs col-span-1" on:click={submit_changes}>
+            <button class="btn btn-ghost btn-xs col-span-1" on:click={submit_changes} on:click={toggle_display}>
                 Save
             </button>
         </div>

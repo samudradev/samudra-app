@@ -17,8 +17,11 @@ macro_rules! export {
             })?
     }
     } => {
-        #[derive(Debug, Serialize, Deserialize, Default, TS)]
+        #[derive(Debug, PartialEq, Serialize, Deserialize, Default, TS, Diff)]
         #[ts(export, export_to="../../src/bindings/")]
+        #[diff(attr(
+            #[derive(Debug)]
+        ))]
         pub struct $dataclass {
             $(
                 pub $field: $type,

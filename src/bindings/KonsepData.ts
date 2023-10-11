@@ -3,4 +3,11 @@ import type { CakupanData } from "./CakupanData";
 import type { GolonganKataData } from "./GolonganKataData";
 import type { KataAsingData } from "./KataAsingData";
 
-export interface KonsepData { id: number, golongan_kata: GolonganKataData, keterangan: string | null, tertib: number | null, cakupan: Array<CakupanData> | null, kata_asing: Array<KataAsingData> | null, }
+export interface KonsepData {
+    id: number,
+    golongan_kata: GolonganKataData,
+    keterangan: string | null,
+    tertib: number | null,
+    cakupan: Array<CakupanData> | null,
+    kata_asing: Array<KataAsingData> | null,
+}

@@ -9,6 +9,8 @@ mod appstate;
 mod event;
 mod menu;
 
+use std::fmt::Debug;
+use serde::{Deserialize, Serialize};
 use appstate::AppConfig;
 use tauri::api::dialog::MessageDialogBuilder;
 use tauri::api::dialog::MessageDialogKind;
@@ -16,6 +18,7 @@ use tauri::State;
 
 use database;
 use database::data::LemmaData;
+use database::data::Diff;
 use database::query::Query;
 use database::DatabaseConnection;
 
@@ -108,6 +111,12 @@ async fn get(config: State<'_, AppConfig>, lemma: &str) -> Result<Vec<LemmaData>
     }
 }
 
+#[tauri::command(async)]
+async fn submit_changes(config: State<'_, AppConfig>, old: LemmaData, new: LemmaData) -> Result<(), String> {
+    println!("{:#?}", old.diff(&new));
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() {
     tauri::Builder::default()
@@ -120,7 +129,8 @@ async fn main() {
             active_database_url,
             count_lemma,
             import_from_csv,
-            insert_single_value
+            insert_single_value,
+            submit_changes
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
