@@ -21,5 +21,5 @@
 {#if !is_edit_mode }
     <DataCardDisplay data={data} toggle_edit={set_edit_mode_true}/>
     {:else}
-    <DataCardEdit data={data} save_data={set_as_data}/>
+    <DataCardEdit data={data} toggle_display={set_as_data}/>
 {/if}
