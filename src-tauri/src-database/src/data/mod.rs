@@ -11,7 +11,7 @@
 mod export;
 
 // Required for the export! macro to work
-pub use diff::Diff;
+pub use diff::{Diff, OptionDiff, VecDiff, VecDiffType};
 // ---
 
 use crate::models::cakupan::Model as Cakupan;

@@ -17,8 +17,8 @@ use tauri::api::dialog::MessageDialogKind;
 use tauri::State;
 
 use database;
-use database::data::LemmaData;
-use database::data::Diff;
+use database::data::{KonsepData, LemmaData, LemmaDataDiff};
+use database::data::{Diff, OptionDiff, VecDiffType};
 use database::query::Query;
 use database::DatabaseConnection;
 
@@ -111,9 +111,56 @@ async fn get(config: State<'_, AppConfig>, lemma: &str) -> Result<Vec<LemmaData>
     }
 }
 
+// LemmaDataDiff {
+//     id: 0,
+//     nama: None,
+//     konseps: Some(
+//         [
+//             Inserted {
+//                 index: 1,
+//                 changes: [
+//                     KonsepDataDiff {
+//                         id: 0,
+//                         golongan_kata: GolonganKataDataDiff {
+//                             id: Some(
+//                                 "undefined",
+//                             ),
+//                             nama: NoChange,
+//                             keterangan: Some(
+//                                 None,
+//                             ),
+//                         },
+//                         keterangan: Some(
+//                             Some(
+//                                 "dadad",
+//                             ),
+//                         ),
+//                         tertib: NoChange,
+//                         cakupan: NoChange,
+//                         kata_asing: NoChange,
+//                     },
+//                 ],
+//             },
+//         ],
+//     ),
+// }
+
 #[tauri::command(async)]
 async fn submit_changes(config: State<'_, AppConfig>, old: LemmaData, new: LemmaData) -> Result<(), String> {
-    println!("{:#?}", old.diff(&new));
+    let diff = old.diff(&new);
+    match diff {
+        // Same ID
+        LemmaDataDiff {id: 0, konseps: OptionDiff::Some(v), ..} => for kon in v.0.iter() {
+            match kon {
+                // TODO Implement changes
+                VecDiffType::Inserted {index, changes} => todo!(),
+                VecDiffType::Altered {index, changes} => todo!(),
+                VecDiffType::Removed {index, changes} => todo!()
+            }
+        },
+        LemmaDataDiff {..} => { todo!(); },
+    }
+    println!("{:#?}", diff);
     Ok(())
 }
 
