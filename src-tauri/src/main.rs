@@ -9,16 +9,15 @@ mod appstate;
 mod event;
 mod menu;
 
-use std::fmt::Debug;
-use serde::{Deserialize, Serialize};
 use appstate::AppConfig;
+use serde::{Deserialize, Serialize};
+use std::fmt::Debug;
 use tauri::api::dialog::MessageDialogBuilder;
 use tauri::api::dialog::MessageDialogKind;
 use tauri::State;
 
 use database;
 use database::data::{KonsepData, LemmaData, LemmaDataDiff};
-use database::data::{Diff, OptionDiff, VecDiffType};
 use database::query::Query;
 use database::DatabaseConnection;
 
@@ -37,21 +36,27 @@ async fn count_lemma(config: State<'_, AppConfig>) -> Result<(), String> {
 }
 
 #[tauri::command(async)]
-async fn insert_single_value(config: State<'_, AppConfig>, lemma: String, konsep: String) -> Result<(), String> {
+async fn insert_single_value(
+    config: State<'_, AppConfig>,
+    lemma: String,
+    konsep: String,
+) -> Result<(), String> {
     match config.get_active_database().connect().await {
         DatabaseConnection::Disconnected => {
             let msg = format!("{} does not exist.", &config.get_active_database().path);
             Err(dbg!(msg))
         }
         conn => {
-            match (database::io::RowValue{ lemma, konsep}).insert(&conn).await
+            match (database::io::RowValue { lemma, konsep })
+                .insert(&conn)
+                .await
             {
                 Ok(msg) => MessageDialogBuilder::new("Success!".to_string(), "Success".to_string())
-                .kind(MessageDialogKind::Info)
-                .show(|_a| {}),
+                    .kind(MessageDialogKind::Info)
+                    .show(|_a| {}),
                 Err(e) => MessageDialogBuilder::new("Failure!".to_string(), e.to_string())
-                .kind(MessageDialogKind::Error)
-                .show(|_a| {}),
+                    .kind(MessageDialogKind::Error)
+                    .show(|_a| {}),
             }
             Ok(())
         }
@@ -111,57 +116,15 @@ async fn get(config: State<'_, AppConfig>, lemma: &str) -> Result<Vec<LemmaData>
     }
 }
 
-// LemmaDataDiff {
-//     id: 0,
-//     nama: None,
-//     konseps: Some(
-//         [
-//             Inserted {
-//                 index: 1,
-//                 changes: [
-//                     KonsepDataDiff {
-//                         id: 0,
-//                         golongan_kata: GolonganKataDataDiff {
-//                             id: Some(
-//                                 "undefined",
-//                             ),
-//                             nama: NoChange,
-//                             keterangan: Some(
-//                                 None,
-//                             ),
-//                         },
-//                         keterangan: Some(
-//                             Some(
-//                                 "dadad",
-//                             ),
-//                         ),
-//                         tertib: NoChange,
-//                         cakupan: NoChange,
-//                         kata_asing: NoChange,
-//                     },
-//                 ],
-//             },
-//         ],
-//     ),
-// }
-
+/// Submit lemma changes to database
 #[tauri::command(async)]
-async fn submit_changes(config: State<'_, AppConfig>, old: LemmaData, new: LemmaData) -> Result<(), String> {
-    let diff = old.diff(&new);
-    match diff {
-        // Same ID
-        LemmaDataDiff {id: 0, konseps: OptionDiff::Some(v), ..} => for kon in v.0.iter() {
-            match kon {
-                // TODO Implement changes
-                VecDiffType::Inserted {index, changes} => todo!(),
-                VecDiffType::Altered {index, changes} => todo!(),
-                VecDiffType::Removed {index, changes} => todo!()
-            }
-        },
-        LemmaDataDiff {..} => { todo!(); },
-    }
-    println!("{:#?}", diff);
-    Ok(())
+async fn submit_changes(
+    config: State<'_, AppConfig>,
+    old: LemmaData,
+    new: LemmaData,
+) -> Result<(), String> {
+    let db = config.get_active_database().connect().await;
+    database::handle_changes(&old, &new, &db).await
 }
 
 #[tokio::main]
