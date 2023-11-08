@@ -10,15 +10,80 @@
 #[macro_use]
 mod export;
 
-// Required for the export! macro to work
-pub use diff::{Diff, OptionDiff, VecDiff, VecDiffType};
-// ---
+use itertools::Itertools;
+use std::collections::HashMap;
+
+use serde::{Deserialize, Serialize};
 
 use crate::models::cakupan::Model as Cakupan;
 use crate::models::golongan_kata::Model as GolonganKata;
 use crate::models::kata_asing::Model as KataAsing;
 use crate::models::konsep::Model as Konsep;
 use crate::models::lemma::Model as Lemma;
+use crate::query::LemmaSQLUnit;
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, diff::Diff)]
+pub struct LemmaDataRepr {
+    pub lemma: String,
+    pub konseps: Vec<KonsepDataRepr>,
+}
+
+#[allow(dead_code)]
+impl LemmaDataRepr {
+    pub(crate) fn from(value: Vec<LemmaSQLUnit>) -> Vec<LemmaDataRepr> {
+        let mut data = Vec::<LemmaDataRepr>::new();
+        let m = value
+            .clone()
+            .into_iter()
+            .into_group_map_by(|a| a.lemma.clone())
+            .into_iter()
+            .map(|(k, v): (String, Vec<LemmaSQLUnit>)| {
+                (
+                    k,
+                    v.into_iter()
+                        .into_group_map_by(|a| a.konsep.as_ref().unwrap().clone()),
+                )
+            })
+            .collect::<HashMap<String, HashMap<String, Vec<LemmaSQLUnit>>>>();
+        for (k, hm) in m.iter() {
+            let mut kvec = Vec::<KonsepDataRepr>::new();
+            for (khm, hmhm) in hm.iter() {
+                kvec.push(KonsepDataRepr {
+                    keterangan: khm.clone(),
+                    golongan_kata: hmhm[0].golongan_kata.clone().unwrap().clone(),
+                    cakupans: hmhm.clone().into_iter().fold(vec![], |mut a, b| {
+                        a.push(b.cakupan.clone().unwrap());
+                        a
+                    }),
+                    kata_asing: hmhm.clone().into_iter().fold(vec![], |mut a, b| {
+                        a.push(KataAsingRepr {
+                            nama: b.kata_asing.clone().unwrap(),
+                            bahasa: b.bahasa_asing.clone().unwrap(),
+                        });
+                        a
+                    }),
+                })
+            }
+            data.push(LemmaDataRepr {
+                lemma: k.clone(),
+                konseps: kvec,
+            })
+        }
+        data
+    }
+}
+#[derive(Debug, Serialize, Deserialize, PartialEq, diff::Diff)]
+pub struct KonsepDataRepr {
+    pub keterangan: String,
+    pub golongan_kata: String,
+    pub cakupans: Vec<String>,
+    pub kata_asing: Vec<KataAsingRepr>,
+}
+#[derive(Debug, Serialize, Deserialize, PartialEq, diff::Diff)]
+pub struct KataAsingRepr {
+    pub nama: String,
+    pub bahasa: String,
+}
 
 export! {
     LemmaData from Lemma with {

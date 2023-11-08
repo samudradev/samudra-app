@@ -1,9 +1,5 @@
-use sea_orm::error::RuntimeErr;
-use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, DatabaseConnection, DbErr, EntityOrSelect, EntityTrait, ModelTrait, QueryFilter, TryIntoModel};
+use sea_orm::{ActiveValue, DatabaseConnection, DbErr};
 use serde::{Deserialize, Serialize};
-use sqlx::error::Error as SqlxError;
-use sqlx::sqlite::SqliteError;
-use std::error::Error;
 
 use crate::models;
 use crate::CheckDuplicateTrait;
@@ -20,14 +16,20 @@ impl RowValue {
             nama: ActiveValue::Set(self.lemma.to_owned()),
             ..Default::default()
         };
-        let lemma = lemma_am.clone().insert_with_check(models::lemma::Column::Id, db).await?;
+        let lemma = lemma_am
+            .clone()
+            .insert_with_check(models::lemma::Column::Id, db)
+            .await?;
         let konsep = models::konsep::ActiveModel {
             lemma_id: ActiveValue::Set(lemma.id),
             golongan_id: ActiveValue::Set(None),
             keterangan: ActiveValue::Set(Some(self.konsep.to_owned())),
             ..Default::default()
         };
-        konsep.clone().insert_with_check(models::konsep::Column::Id, db).await?;
+        konsep
+            .clone()
+            .insert_with_check(models::konsep::Column::Id, db)
+            .await?;
         Ok(())
     }
 }
@@ -59,7 +61,10 @@ pub async fn import_from_csv(
 ) -> Result<String, DbErr> {
     let mut count: i128 = 0;
     let data = dbg!(read_csv(path, delimiter, terminator).unwrap());
-    for d in data.iter() {d.insert(db).await?; count += 1 };
+    for d in data.iter() {
+        d.insert(db).await?;
+        count += 1
+    }
     Ok(format!(
         "{} items imported from {}.",
         count,

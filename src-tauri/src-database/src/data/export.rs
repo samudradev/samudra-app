@@ -65,5 +65,16 @@ macro_rules! export {
                 lem
             }
         })*)?
+        $($(impl From<($datamodel, std::option::Option<$tagmodel>)> for $dataclass {
+            fn from(value: ($datamodel, std::option::Option<$tagmodel>)) -> Self {
+                let mut lem = $dataclass::from(value.0.clone());
+                lem.$tagfield = Some(
+                    vec![$tagclass::from(value
+                        .1
+                        .unwrap())]
+                );
+                lem
+            }
+        })*)?
     };
 }
