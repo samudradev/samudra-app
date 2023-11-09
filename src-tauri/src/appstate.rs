@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use tauri::api::path;
 
-use database::{DatabaseConfig, DatabaseConnection};
+pub use database::states::{DatabaseConfig, DatabaseConnection};
 
 #[derive(Debug)]
 pub struct AppPaths {

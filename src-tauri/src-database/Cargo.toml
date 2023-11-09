@@ -14,6 +14,7 @@ sea-orm = { version = "0.12.4", default-features = false, features = [
     "chrono",
     "runtime-tokio-rustls",
     "sqlx-sqlite",
+    "sea-orm-internal",
     "sqlx-dep",
     "macros",
     "with-chrono",

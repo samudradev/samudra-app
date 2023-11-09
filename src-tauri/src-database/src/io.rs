@@ -1,9 +1,9 @@
-use sea_orm::{ActiveValue, DatabaseConnection, DbErr};
+#![allow(dead_code)]
+
+use sea_orm::{DatabaseConnection, DbErr};
 use serde::{Deserialize, Serialize};
 
-use crate::models;
-use crate::CheckDuplicateTrait;
-
+// TODO Implement Import From CSV for LemmaWithKonsepView
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RowValue {
     pub lemma: String,
@@ -11,26 +11,27 @@ pub struct RowValue {
 }
 
 impl RowValue {
-    pub async fn insert(&self, db: &DatabaseConnection) -> Result<(), DbErr> {
-        let lemma_am = models::lemma::ActiveModel {
-            nama: ActiveValue::Set(self.lemma.to_owned()),
-            ..Default::default()
-        };
-        let lemma = lemma_am
-            .clone()
-            .insert_with_check(models::lemma::Column::Id, db)
-            .await?;
-        let konsep = models::konsep::ActiveModel {
-            lemma_id: ActiveValue::Set(lemma.id),
-            golongan_id: ActiveValue::Set(None),
-            keterangan: ActiveValue::Set(Some(self.konsep.to_owned())),
-            ..Default::default()
-        };
-        konsep
-            .clone()
-            .insert_with_check(models::konsep::Column::Id, db)
-            .await?;
-        Ok(())
+    pub async fn insert(&self, _db: &DatabaseConnection) -> Result<(), DbErr> {
+        // let lemma_am = models::lemma::ActiveModel {
+        //     nama: ActiveValue::Set(self.lemma.to_owned()),
+        //     ..Default::default()
+        // };
+        // let lemma = lemma_am
+        //     .clone()
+        //     .insert_with_check(models::lemma::Column::Id, db)
+        //     .await?;
+        // let konsep = models::konsep::ActiveModel {
+        //     lemma_id: ActiveValue::Set(lemma.id),
+        //     golongan_id: ActiveValue::Set(None),
+        //     keterangan: ActiveValue::Set(Some(self.konsep.to_owned())),
+        //     ..Default::default()
+        // };
+        // konsep
+        //     .clone()
+        //     .insert_with_check(models::konsep::Column::Id, db)
+        //     .await?;
+        // Ok(())
+        todo!();
     }
 }
 

@@ -1,153 +1,85 @@
-use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
+use sqlx::{QueryBuilder, Sqlite};
 
-use crate::data::LemmaData;
-use crate::models;
-use crate::models::prelude::*;
+use crate::views::LemmaWithKonsepView;
 
-#[allow(dead_code)]
-#[derive(Debug, Clone)]
-pub(crate) struct LemmaSQLUnit {
-    pub(crate) lemma: String,
-    pub(crate) konsep: Option<String>,
-    pub(crate) golongan_kata: Option<String>,
-    pub(crate) cakupan: Option<String>,
-    pub(crate) kata_asing: Option<String>,
-    pub(crate) bahasa_asing: Option<String>,
+pub struct QueryView<'a, DB: sqlx::Database> {
+    // view: V,
+    query: QueryBuilder<'a, DB>,
 }
 
-#[allow(dead_code)]
-impl LemmaSQLUnit {
-    pub async fn query_with(
-        query: Query,
-        pool: &sqlx::SqlitePool,
-    ) -> sqlx::Result<Vec<LemmaSQLUnit>> {
-        match query.mode {
-            QueryMode::AND => {
-                sqlx::query_as!(
-                    LemmaSQLUnit,
-                    r#" SELECT 
-                            lemma.nama AS lemma,
-                            konsep.keterangan AS konsep, 
-                            konsep.golongan_id AS golongan_kata,
-                            cakupan.keterangan AS cakupan,
-                            kata_asing.nama AS kata_asing,
-                            kata_asing.bahasa AS bahasa_asing
-                        FROM lemma
-                        LEFT JOIN konsep ON konsep.lemma_id = lemma.id 
-                        LEFT JOIN cakupan_x_konsep as cxk ON cxk.konsep_id = konsep.id 
-                        LEFT JOIN cakupan ON cakupan.id = cxk.cakupan_id
-                        LEFT JOIN kata_asing_x_konsep as kaxk ON kaxk.konsep_id = konsep.id 
-                        LEFT JOIN kata_asing ON kata_asing.id = kaxk.kata_asing_id
-                        WHERE lemma.nama = ? AND konsep.keterangan LIKE ?
-                        "#,
-                    query.lemma,
-                    query.konsep
-                )
-                .fetch_all(pool)
-                .await
-            }
-            QueryMode::OR => {
-                sqlx::query_as!(
-                    LemmaSQLUnit,
-                    r#"SELECT 
-                    lemma.nama AS lemma,
-                    konsep.keterangan AS konsep, 
-                    konsep.golongan_id AS golongan_kata,
-                    cakupan.keterangan AS cakupan,
-                    kata_asing.nama AS kata_asing,
-                kata_asing.bahasa AS bahasa_asing
-                FROM lemma
-                LEFT JOIN konsep ON konsep.lemma_id = lemma.id 
-                LEFT JOIN cakupan_x_konsep as cxk ON cxk.konsep_id = konsep.id 
-                LEFT JOIN cakupan ON cakupan.id = cxk.cakupan_id
-                LEFT JOIN kata_asing_x_konsep as kaxk ON kaxk.konsep_id = konsep.id 
-                LEFT JOIN kata_asing ON kata_asing.id = kaxk.kata_asing_id
-                WHERE lemma.nama = ? OR konsep.keterangan LIKE ?
-                "#,
-                    query.lemma,
-                    query.konsep
-                )
-                .fetch_all(pool)
-                .await
-            }
+impl<'a> QueryView<'a, Sqlite> {
+    pub fn new() -> Self {
+        let query = QueryBuilder::new(
+            r#" SELECT 
+            lemma.nama AS lemma,
+            konsep.keterangan AS konsep, 
+            konsep.golongan_id AS golongan_kata,
+            cakupan.keterangan AS cakupan,
+            kata_asing.nama AS kata_asing,
+            kata_asing.bahasa AS bahasa_asing,
+            lemma.id AS l_id,
+            konsep.id AS k_id
+            FROM lemma
+            LEFT JOIN konsep ON konsep.lemma_id = lemma.id 
+            LEFT JOIN cakupan_x_konsep as cxk ON cxk.konsep_id = konsep.id 
+            LEFT JOIN cakupan ON cakupan.id = cxk.cakupan_id
+            LEFT JOIN kata_asing_x_konsep as kaxk ON kaxk.konsep_id = konsep.id 
+            LEFT JOIN kata_asing ON kata_asing.id = kaxk.kata_asing_id"#,
+        );
+        QueryView {
+            // view: LemmaWithKonsepView::default(),
+            query,
         }
     }
-    pub async fn query_all(pool: &sqlx::SqlitePool) -> sqlx::Result<Vec<LemmaSQLUnit>> {
-        sqlx::query_as!(
-            LemmaSQLUnit,
-            r#"SELECT 
-                    lemma.nama AS lemma,
-                    konsep.keterangan AS konsep, 
-                    konsep.golongan_id AS golongan_kata,
-                    cakupan.keterangan AS cakupan,
-                    kata_asing.nama AS kata_asing,
-                    kata_asing.bahasa AS bahasa_asing
-                FROM lemma
-                LEFT JOIN konsep ON konsep.lemma_id = lemma.id 
-                LEFT JOIN cakupan_x_konsep as cxk ON cxk.konsep_id = konsep.id 
-                LEFT JOIN cakupan ON cakupan.id = cxk.cakupan_id
-                LEFT JOIN kata_asing_x_konsep as kaxk ON kaxk.konsep_id = konsep.id 
-                LEFT JOIN kata_asing ON kata_asing.id = kaxk.kata_asing_id
-                "#
-        )
-        .fetch_all(pool)
-        .await
+    pub async fn all(self, db: &sqlx::SqlitePool) -> sqlx::Result<Vec<LemmaWithKonsepView>> {
+        sqlx::query_as(self.query.sql()).fetch_all(db).await
+    }
+    pub async fn with(
+        self,
+        params: QueryParams,
+        db: &sqlx::SqlitePool,
+    ) -> sqlx::Result<Vec<LemmaWithKonsepView>> {
+        let mut query = self.query;
+        match params.mode {
+            QueryMode::AND => {
+                query.push_bind(r#"WHERE lemma.nama = ? AND konsep.keterangan LIKE ?"#)
+            }
+            QueryMode::OR => query.push_bind(r#"WHERE lemma.nama = ? OR konsep.keterangan LIKE ?"#),
+        };
+        sqlx::query_as(query.sql())
+            .bind(params.lemma)
+            .bind(params.konsep)
+            .fetch_all(db)
+            .await
     }
 }
 
-#[derive(Default)]
-pub struct Query {
+#[derive(Debug)]
+pub struct QueryParams {
     lemma: String,
     konsep: String,
     mode: QueryMode,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 enum QueryMode {
     AND,
-    #[default]
     OR,
 }
 
-impl Query {
-    pub fn new() -> Query {
-        Default::default()
-    }
-
-    pub fn either() -> Query {
-        Query {
+impl QueryParams {
+    pub fn either(lemma: String, konsep: String) -> QueryParams {
+        QueryParams {
             mode: QueryMode::OR,
-            ..Default::default()
+            lemma,
+            konsep,
         }
     }
-    pub fn strict() -> Query {
-        Query {
+    pub fn both(lemma: String, konsep: String) -> QueryParams {
+        QueryParams {
             mode: QueryMode::AND,
-            ..Default::default()
+            lemma,
+            konsep,
         }
-    }
-
-    pub fn lemma(mut self, lemma: &str) -> Self {
-        self.lemma = lemma.to_string();
-        self
-    }
-    pub fn konsep(mut self, konsep: &str) -> Self {
-        self.konsep = konsep.to_string();
-        self
-    }
-
-    pub async fn collect(
-        &self,
-        db: &DatabaseConnection,
-    ) -> Result<Vec<LemmaData>, sea_orm::error::DbErr> {
-        let _mode = &self.mode;
-        Ok(Lemma::find()
-            .filter(models::lemma::Column::Nama.eq(self.lemma.clone()))
-            .find_with_related(Konsep)
-            .all(db)
-            .await?
-            .into_iter()
-            .map(|v| LemmaData::from(v))
-            .collect::<Vec<LemmaData>>())
     }
 }
