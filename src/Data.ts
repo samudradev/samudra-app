@@ -1,7 +1,6 @@
-import {type Writable, writable} from "svelte/store";
-import type {LemmaData} from "./bindings/LemmaData";
-import DataCard from "./lib/Datacard.svelte";
+import { type Writable, writable } from "svelte/store";
+import type { LemmaItem } from "./bindings/LemmaItem";
 
-const LemmaStore: Writable<LemmaData[]> = writable([]);
+const LemmaStore: Writable<LemmaItem[]> = writable([]);
 
 export default LemmaStore;

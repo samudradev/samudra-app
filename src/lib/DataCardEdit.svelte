@@ -1,12 +1,12 @@
 <script lang="ts">
-    import type { LemmaData } from "../bindings/LemmaData";
+    import type { LemmaItem } from "../bindings/LemmaItem";
     import _ from "lodash";
-    import type { KonsepData } from "../bindings/KonsepData";
+    import type { KonsepItem } from "../bindings/KonsepItem";
     import { invoke } from "@tauri-apps/api";
     import { onMount } from "svelte";
 
-    export let data: LemmaData;
-    let old_data: LemmaData;
+    export let data: LemmaItem;
+    let old_data: LemmaItem;
     let new_keterangan: string;
     let new_golongan_kata: string;
 
@@ -15,7 +15,7 @@
     });
     function append_new_konsep() {
         data.konseps.push(
-            Object.assign({} as KonsepData, {
+            Object.assign({} as KonsepItem, {
                 id: 0,
                 keterangan: new_keterangan,
                 golongan_kata: {
@@ -43,10 +43,9 @@
 <div class="card card-normal m-4 w-96 bg-blue-100 shadow-xl">
     <div class="card-body">
         <div class="grid w-full grid-flow-row-dense grid-cols-4 grid-rows-1">
-            <!--            <h2 class="">{data.nama}</h2>-->
             <input
                 type="text"
-                bind:value={data.nama}
+                bind:value={data.lemma}
                 class="input input-bordered w-full max-w-xs card-title col-span-3"
             />
             <button
@@ -67,17 +66,19 @@
                             class="textarea"
                             bind:value={konsep.keterangan}
                         />
-                        {#if konsep.cakupan != null}
+                        {#if konsep.cakupans != null}
                             <div class="column">
-                                {#each konsep.cakupan as cakupan}
-                                    <div class="badge">{cakupan.nama}</div>
+                                {#each konsep.cakupans as cakupan}
+                                    <div class="badge">{cakupan}</div>
                                 {/each}
                             </div>
                         {:else}{/if}
                         {#if konsep.kata_asing != null}
                             <div class="column">
                                 {#each konsep.kata_asing as kata_asing}
-                                    <div class="badge">{kata_asing.nama}</div>
+                                    <div class="badge">
+                                        {kata_asing.nama} ({kata_asing.bahasa})
+                                    </div>
                                 {/each}
                             </div>
                         {/if}

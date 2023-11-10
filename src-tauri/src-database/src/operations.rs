@@ -1,13 +1,10 @@
 #![allow(unused_variables)]
 
-use diff::{Diff, OptionDiff, VecDiffType};
-use sea_orm::{
-    prelude::async_trait::async_trait, ActiveModelTrait, ActiveValue, DatabaseConnection,
-    SqlxSqliteConnector,
-};
+use diff::Diff;
+use sea_orm::{prelude::async_trait::async_trait, ActiveModelTrait, SqlxSqliteConnector};
 
 use crate::{
-    data::{KonsepDataRepr, LemmaDataRepr, LemmaDataReprDiff},
+    data::{LemmaItem, LemmaItemDiff},
     models::konsep,
 };
 
@@ -17,11 +14,11 @@ trait DiffSumbittable<DB: sqlx::Database>: diff::Diff {
 }
 
 #[async_trait]
-impl DiffSumbittable<sqlx::Sqlite> for LemmaDataRepr {
+impl DiffSumbittable<sqlx::Sqlite> for LemmaItem {
     async fn submit_changes(self, new: &Self, db: &sqlx::Pool<sqlx::Sqlite>) -> sqlx::Result<()> {
         let diff = self.clone().diff(new);
         match diff {
-            LemmaDataReprDiff {
+            LemmaItemDiff {
                 konseps,
                 // lemma: None, // No change in lemma
                 // id: 0,       // No change in lemma id
@@ -47,7 +44,7 @@ impl DiffSumbittable<sqlx::Sqlite> for LemmaDataRepr {
                         }
                         diff::VecDiffType::Removed { index: _, len } => todo!("Konsep Removed!"),
                         diff::VecDiffType::Altered { index: _, changes } => {
-                            todo!("Konsep Altered!")
+                            todo!("Konsep Altered! {:#?}", changes)
                         }
                     }
                 }
@@ -59,7 +56,7 @@ impl DiffSumbittable<sqlx::Sqlite> for LemmaDataRepr {
 
 #[cfg(test)]
 mod test {
-    use crate::data::{KataAsingRepr, KonsepDataRepr, LemmaDataRepr};
+    use crate::data::{KataAsingItem, KonsepItem, LemmaItem};
     use crate::operations::DiffSumbittable;
     use crate::query::QueryView;
     use sqlx::{Pool, Sqlite};
@@ -68,33 +65,33 @@ mod test {
     #[sqlx::test(fixtures("lemma"))]
     fn test_diff_handling(pool: Pool<Sqlite>) -> Result<(), sqlx::Error> {
         let view = QueryView::new().all(&pool).await?;
-        let data = LemmaDataRepr::from_views(view);
+        let data = LemmaItem::from_views(view);
         let _old = data
             .first()
             .expect("Vec<LemmaDataRepr> is zero sized")
             .to_owned();
         assert_eq!(&_old.konseps.len(), &1);
-        let _new: LemmaDataRepr = LemmaDataRepr {
+        let _new: LemmaItem = LemmaItem {
             id: 1,
             lemma: "cakera tokokan".into(),
             konseps: vec![
-                KonsepDataRepr {
+                KonsepItem {
                     id: 1,
                     keterangan: "gas-gas dan debu yang mengelilingi lohong hitam".into(),
                     golongan_kata: "NAMA".into(),
                     cakupans: vec!["Astrofizik".into(), "Teori Relativiti".into()],
                     kata_asing: vec![
-                        KataAsingRepr {
+                        KataAsingItem {
                             nama: "accretion disk".into(),
                             bahasa: "english".into(),
                         },
-                        KataAsingRepr {
+                        KataAsingItem {
                             nama: "accretion disk".into(),
                             bahasa: "english".into(),
                         },
                     ],
                 },
-                KonsepDataRepr {
+                KonsepItem {
                     id: 2,
                     keterangan: "konsep baharu yang tiada kena mengena".into(),
                     golongan_kata: "NAMA".into(),
@@ -105,7 +102,7 @@ mod test {
         };
         _old.submit_changes(&_new, &pool).await?;
         let view = QueryView::new().all(&pool).await?;
-        let data = LemmaDataRepr::from_views(view);
+        let data = LemmaItem::from_views(view);
         assert_eq!(data.first().expect("Here?").konseps.len(), 2);
         Ok(())
     }

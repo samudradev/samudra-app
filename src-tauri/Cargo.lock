@@ -2854,7 +2854,6 @@ dependencies = [
 name = "samudra"
 version = "0.1.0"
 dependencies = [
- "async-trait",
  "chrono",
  "futures",
  "serde",
@@ -2864,7 +2863,6 @@ dependencies = [
  "tauri-build",
  "tokio",
  "toml 0.7.8",
- "ts-rs",
 ]
 
 [[package]]
