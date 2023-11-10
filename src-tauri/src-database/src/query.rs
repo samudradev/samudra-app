@@ -10,7 +10,7 @@ pub struct QueryView<'a, DB: sqlx::Database> {
 impl<'a> QueryView<'a, Sqlite> {
     pub fn new() -> Self {
         let query = QueryBuilder::new(
-            r#" SELECT 
+            r#"SELECT 
             lemma.nama AS lemma,
             konsep.keterangan AS konsep, 
             konsep.golongan_id AS golongan_kata,
@@ -39,18 +39,34 @@ impl<'a> QueryView<'a, Sqlite> {
         params: QueryParams,
         db: &sqlx::SqlitePool,
     ) -> sqlx::Result<Vec<LemmaWithKonsepView>> {
-        let mut query = self.query;
-        match params.mode {
-            QueryMode::AND => {
-                query.push_bind(r#"WHERE lemma.nama = ? AND konsep.keterangan LIKE ?"#)
+        let mut query: QueryBuilder<sqlx::Sqlite> = self.query;
+        let (empty_lemma, empty_konsep) = (params.lemma.is_empty(), params.konsep.is_empty());
+        match (empty_lemma, empty_konsep) {
+            (false, true) => {
+                query.push(r#" WHERE lemma.nama = "#);
+                query.push_bind(params.lemma);
             }
-            QueryMode::OR => query.push_bind(r#"WHERE lemma.nama = ? OR konsep.keterangan LIKE ?"#),
+            (true, false) => {
+                query.push(r#" WHERE konsep.keterangan LIKE "#);
+                query.push_bind(params.konsep);
+            }
+            (false, false) => match params.mode {
+                QueryMode::AND => {
+                    query.push(r#" WHERE lemma.nama = "#);
+                    query.push_bind(params.lemma);
+                    query.push(r#" AND konsep.keterangan LIKE "#);
+                    query.push_bind(params.konsep);
+                }
+                QueryMode::OR => {
+                    query.push(r#" WHERE lemma.nama = "#);
+                    query.push_bind(params.lemma);
+                    query.push(r#" OR konsep.keterangan LIKE "#);
+                    query.push_bind(params.konsep);
+                }
+            },
+            (true, true) => return QueryView::new().all(db).await,
         };
-        sqlx::query_as(query.sql())
-            .bind(params.lemma)
-            .bind(params.konsep)
-            .fetch_all(db)
-            .await
+        query.build_query_as().fetch_all(db).await
     }
 }
 
