@@ -8,7 +8,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "test": "cargo test --manifest-path ./src-tauri/Cargo.toml --workspace",
+    "watch": "cargo  watch -x \"test --workspace\" -C src-tauri/ -c"
   },
   "dependencies": {
     "@tauri-apps/api": "^1.4.0",
