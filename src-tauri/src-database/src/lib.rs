@@ -9,8 +9,6 @@ pub mod views;
 
 pub(crate) mod models;
 
-pub use sea_orm as orm;
-
 // TODO Reimplement check duplicate using diff
 // #[async_trait]
 // trait CheckDuplicateTrait<E>:

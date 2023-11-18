@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS konsep (
     keterangan TEXT,
     tertib INTEGER,
     FOREIGN KEY (lemma_id) REFERENCES lemma(id) ON DELETE SET DEFAULT,
-    FOREIGN KEY (golongan_id) REFERENCES golongan_kata(id) ON UPDATE CASCADE ON DELETE SET NULL
+    FOREIGN KEY (golongan_id) REFERENCES golongan_kata(id) ON UPDATE CASCADE ON DELETE SET DEFAULT
 );
 
 CREATE TABLE IF NOT EXISTS golongan_kata (

@@ -1,28 +1,29 @@
 //! Backend for the Samudra App.
-
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 #![warn(unused_variables, dead_code)]
-// #![warn(missing_docs)]
+#![warn(missing_docs)]
 
 mod appstate;
 mod event;
 mod menu;
 
-use appstate::{AppConfig, DatabaseConnection};
+use appstate::AppConfig;
 use tauri::api::dialog::MessageDialogBuilder;
 use tauri::api::dialog::MessageDialogKind;
 use tauri::State;
 
 use database;
-use database::data::LemmaDataRepr;
+use database::data::LemmaItem;
 use database::query::{QueryParams, QueryView};
 
+// TODO create insert trait
 // TODO Show config
 
-#[tauri::command]
-fn active_database_url(config: State<'_, AppConfig>) -> String {
-    config.get_active_database().full_url()
+/// Exposes the active database URL to the frontend.
+#[tauri::command(async)]
+async fn active_database_url(config: State<'_, AppConfig>) -> Result<String, String> {
+    Ok(config.get_active_database().await.path)
 }
 
 // TODO Show database statistic
@@ -32,34 +33,27 @@ fn active_database_url(config: State<'_, AppConfig>) -> String {
 //     Ok(())
 // }
 
+// ! TODO insert using LemmaItem
+/// Insert single value
 #[tauri::command(async)]
 async fn insert_single_value(
     config: State<'_, AppConfig>,
     lemma: String,
     konsep: String,
 ) -> Result<(), String> {
-    match config.get_active_database().connect().await {
-        DatabaseConnection::Disconnected => {
-            let msg = format!("{} does not exist.", &config.get_active_database().path);
-            Err(dbg!(msg))
-        }
-        conn => {
-            match (database::io::RowValue { lemma, konsep })
-                .insert(&conn)
-                .await
-            {
-                Ok(_msg) => {
-                    MessageDialogBuilder::new("Success!".to_string(), "Success".to_string())
-                        .kind(MessageDialogKind::Info)
-                        .show(|_a| {})
-                }
-                Err(e) => MessageDialogBuilder::new("Failure!".to_string(), e.to_string())
-                    .kind(MessageDialogKind::Error)
-                    .show(|_a| {}),
-            }
-            Ok(())
-        }
+    let conn = config.get_active_database().await.pool;
+    match (database::io::RowValue { lemma, konsep })
+        .insert(&conn)
+        .await
+    {
+        Ok(_msg) => MessageDialogBuilder::new("Success!".to_string(), "Success".to_string())
+            .kind(MessageDialogKind::Info)
+            .show(|_a| {}),
+        Err(e) => MessageDialogBuilder::new("Failure!".to_string(), e.to_string())
+            .kind(MessageDialogKind::Error)
+            .show(|_a| {}),
     }
+    Ok(())
 }
 
 /// Import data from a csv file.
@@ -101,38 +95,30 @@ async fn import_from_csv(_config: State<'_, AppConfig>, _path: String) -> Result
     // }
 }
 
+/// Get a vector of [`LemmaItem`] that matches the argument.
 #[tauri::command(async)]
-async fn get(config: State<'_, AppConfig>, lemma: &str) -> Result<Vec<LemmaDataRepr>, String> {
-    match config.get_active_database().connect().await {
-        DatabaseConnection::Disconnected => {
-            let msg = format!("{} does not exist.", &config.get_active_database().path);
-            Err(dbg!(msg))
-        }
-        conn => {
-            let views = QueryView::new()
-                .with(
-                    QueryParams::either(lemma.into(), "".into()),
-                    conn.get_sqlite_connection_pool(),
-                )
-                .await
-                .unwrap();
-            Ok(dbg!(LemmaDataRepr::from_views(views)))
-        }
-    }
+async fn get(config: State<'_, AppConfig>, lemma: &str) -> Result<Vec<LemmaItem>, String> {
+    let conn = config.get_active_database().await.pool;
+    let views = QueryView::new()
+        .with(QueryParams::either(lemma.into(), "".into()), &conn)
+        .await
+        .unwrap();
+    Ok(dbg!(LemmaItem::from_views(views)))
 }
 
 /// Submit lemma changes to database
 #[tauri::command(async)]
 async fn submit_changes(
     config: State<'_, AppConfig>,
-    old: LemmaDataRepr,
-    new: LemmaDataRepr,
+    _old: LemmaItem,
+    _new: LemmaItem,
 ) -> Result<(), String> {
-    let _db = config.get_active_database().connect().await;
+    let _db = config.get_active_database().await.pool;
     // database::operations::handle_changes(&old, &new, &db).await
     todo!()
 }
 
+/// The entrypoint of this tauri app
 #[tokio::main]
 async fn main() {
     tauri::Builder::default()

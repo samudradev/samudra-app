@@ -8,13 +8,13 @@ INSERT INTO konsep (id, lemma_id, golongan_id, keterangan)
     VALUES (1, 1, "NAMA", "gas-gas dan debu yang mengelilingi lohong hitam");
 
 INSERT INTO cakupan (id, nama, keterangan)
-    VALUES (1, "ASF", "Astrofizik");
+    VALUES (1, "Astrofizik", NULL);
 
 INSERT INTO cakupan_x_konsep (konsep_id, cakupan_id)
     VALUES (1, 1);
 
 INSERT INTO cakupan (id, nama, keterangan)
-    VALUES (2, "REL", "Teori Relativiti");
+    VALUES (2, "Teori Relativiti", NULL);
 
 INSERT INTO cakupan_x_konsep (konsep_id, cakupan_id)
     VALUES (1, 2);

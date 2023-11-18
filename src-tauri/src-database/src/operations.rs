@@ -1,21 +1,20 @@
-#![allow(unused_variables)]
-
+use async_trait::async_trait;
 use diff::Diff;
-use sea_orm::{prelude::async_trait::async_trait, ActiveModelTrait, SqlxSqliteConnector};
+use ormlite::model::Insertable;
 
 use crate::{
-    data::{LemmaItem, LemmaItemDiff},
-    models::konsep,
+    data::{KonsepItem, LemmaItem, LemmaItemDiff, ToTable, ToTableWithReference},
+    models::konsep::InsertKonsep,
 };
 
 #[async_trait]
 trait DiffSumbittable<DB: sqlx::Database>: diff::Diff {
-    async fn submit_changes(self, new: &Self, db: &sqlx::Pool<DB>) -> sqlx::Result<()>;
+    async fn submit_changes(self, new: &Self, pool: &sqlx::Pool<DB>) -> sqlx::Result<()>;
 }
 
 #[async_trait]
 impl DiffSumbittable<sqlx::Sqlite> for LemmaItem {
-    async fn submit_changes(self, new: &Self, db: &sqlx::Pool<sqlx::Sqlite>) -> sqlx::Result<()> {
+    async fn submit_changes(self, new: &Self, pool: &sqlx::Pool<sqlx::Sqlite>) -> sqlx::Result<()> {
         let diff = self.clone().diff(new);
         match diff {
             LemmaItemDiff {
@@ -24,39 +23,20 @@ impl DiffSumbittable<sqlx::Sqlite> for LemmaItem {
                 // id: 0,       // No change in lemma id
                 ..
             } => {
-                for kon in konseps.0.into_iter() {
-                    match kon {
-                        diff::VecDiffType::Inserted { index: _, changes } => {
-                            for c in changes.into_iter() {
-                                let new = konsep::ActiveModel {
-                                    id: sea_orm::ActiveValue::NotSet,
-                                    tarikh_masuk: sea_orm::ActiveValue::NotSet,
-                                    lemma_id: sea_orm::ActiveValue::Set(self.id),
-                                    golongan_id: sea_orm::ActiveValue::Set(c.golongan_kata),
-                                    keterangan: sea_orm::ActiveValue::Set(c.keterangan),
-                                    tertib: sea_orm::ActiveValue::NotSet,
-                                };
-                                new.insert(&SqlxSqliteConnector::from_sqlx_sqlite_pool(db.clone()))
-                                    .await
-                                    .unwrap();
-                                // TODO append tags
-                            }
-                        }
-                        diff::VecDiffType::Removed { index: _, len } => todo!("Konsep Removed!"),
-                        diff::VecDiffType::Altered { index: _, changes } => {
-                            todo!("Konsep Altered! {:#?}", changes)
-                        }
-                    }
+                for kon in self.konseps.apply_new(&konseps) {
+                    kon.insert_safe_with_reference(&self, pool)
+                        .await
+                        .expect("Row not found");
                 }
             }
-        };
+        }
         Ok(())
     }
 }
 
 #[cfg(test)]
 mod test {
-    use crate::data::{KataAsingItem, KonsepItem, LemmaItem};
+    use crate::data::{DbProvided, KataAsingItem, KonsepItem, LemmaItem};
     use crate::operations::DiffSumbittable;
     use crate::query::QueryView;
     use sqlx::{Pool, Sqlite};
@@ -72,11 +52,11 @@ mod test {
             .to_owned();
         assert_eq!(&_old.konseps.len(), &1);
         let _new: LemmaItem = LemmaItem {
-            id: 1,
+            id: DbProvided::Known(1),
             lemma: "cakera tokokan".into(),
             konseps: vec![
                 KonsepItem {
-                    id: 1,
+                    id: DbProvided::Unknown,
                     keterangan: "gas-gas dan debu yang mengelilingi lohong hitam".into(),
                     golongan_kata: "NAMA".into(),
                     cakupans: vec!["Astrofizik".into(), "Teori Relativiti".into()],
@@ -92,7 +72,7 @@ mod test {
                     ],
                 },
                 KonsepItem {
-                    id: 2,
+                    id: DbProvided::Unknown,
                     keterangan: "konsep baharu yang tiada kena mengena".into(),
                     golongan_kata: "NAMA".into(),
                     cakupans: vec![],

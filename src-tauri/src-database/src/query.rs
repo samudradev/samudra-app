@@ -14,7 +14,7 @@ impl<'a> QueryView<'a, Sqlite> {
             lemma.nama AS lemma,
             konsep.keterangan AS konsep, 
             konsep.golongan_id AS golongan_kata,
-            cakupan.keterangan AS cakupan,
+            cakupan.nama AS cakupan,
             kata_asing.nama AS kata_asing,
             kata_asing.bahasa AS bahasa_asing,
             lemma.id AS l_id,

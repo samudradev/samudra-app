@@ -14,7 +14,7 @@ pub struct LemmaWithKonsepView {
 #[cfg(test)]
 mod test {
 
-    use crate::data::{KataAsingItem, KonsepItem, LemmaItem};
+    use crate::data::{DbProvided, KataAsingItem, KonsepItem, LemmaItem};
     use crate::query::{QueryParams, QueryView};
     use crate::views::LemmaWithKonsepView;
     use itertools::Itertools;
@@ -28,10 +28,10 @@ mod test {
         assert_eq!(
             data.next().unwrap(),
             LemmaItem {
-                id: 1,
+                id: DbProvided::Known(1),
                 lemma: "cakera tokokan".into(),
                 konseps: vec![KonsepItem {
-                    id: 1,
+                    id: DbProvided::Known(1),
                     keterangan: "gas-gas dan debu yang mengelilingi lohong hitam".into(),
                     golongan_kata: "NAMA".into(),
                     cakupans: vec!["Astrofizik".into(), "Teori Relativiti".into(),],
@@ -51,10 +51,10 @@ mod test {
         assert_eq!(
             data.next().unwrap(),
             LemmaItem {
-                id: 2,
+                id: DbProvided::Known(2),
                 lemma: "ufuk peristiwa".into(),
                 konseps: vec![KonsepItem {
-                    id: 2,
+                    id: DbProvided::Known(2),
                     keterangan: "sempadan terluar lohong hitam".into(),
                     golongan_kata: "NAMA".into(),
                     cakupans: vec!["Astrofizik".into(), "Teori Relativiti".into(),],
@@ -83,10 +83,10 @@ mod test {
         assert_eq!(
             data.next(),
             Some(LemmaItem {
-                id: 1,
+                id: DbProvided::Known(1),
                 lemma: "cakera tokokan".into(),
                 konseps: vec![KonsepItem {
-                    id: 1,
+                    id: DbProvided::Known(1),
                     keterangan: "gas-gas dan debu yang mengelilingi lohong hitam".into(),
                     golongan_kata: "NAMA".into(),
                     cakupans: vec!["Astrofizik".into(), "Teori Relativiti".into(),],

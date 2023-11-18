@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
-use sea_orm::{DatabaseConnection, DbErr};
 use serde::{Deserialize, Serialize};
+use sqlx::{Database, Pool};
 
 // TODO Implement Import From CSV for LemmaWithKonsepView
 #[derive(Debug, Serialize, Deserialize)]
@@ -11,7 +11,7 @@ pub struct RowValue {
 }
 
 impl RowValue {
-    pub async fn insert(&self, _db: &DatabaseConnection) -> Result<(), DbErr> {
+    pub async fn insert<DB: Database>(&self, _db: &sqlx::Pool<DB>) -> sqlx::Result<()> {
         // let lemma_am = models::lemma::ActiveModel {
         //     nama: ActiveValue::Set(self.lemma.to_owned()),
         //     ..Default::default()
@@ -54,12 +54,12 @@ fn read_csv(
     rdr.deserialize().into_iter().collect()
 }
 
-pub async fn import_from_csv(
+pub async fn import_from_csv<DB: Database>(
     path: &std::path::Path,
     delimiter: Option<u8>,
     terminator: Option<u8>,
-    db: &DatabaseConnection,
-) -> Result<String, DbErr> {
+    db: &Pool<DB>,
+) -> sqlx::Result<String> {
     let mut count: i128 = 0;
     let data = dbg!(read_csv(path, delimiter, terminator).unwrap());
     for d in data.iter() {
