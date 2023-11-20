@@ -1,11 +1,8 @@
 use async_trait::async_trait;
 use diff::Diff;
-use ormlite::model::Insertable;
 
-use crate::{
-    data::{KonsepItem, LemmaItem, LemmaItemDiff, ToTable, ToTableWithReference},
-    models::konsep::InsertKonsep,
-};
+use crate::data::{LemmaItem, LemmaItemDiff};
+use crate::insertions::ToTableWithReference;
 
 #[async_trait]
 trait DiffSumbittable<DB: sqlx::Database>: diff::Diff {
@@ -36,9 +33,10 @@ impl DiffSumbittable<sqlx::Sqlite> for LemmaItem {
 
 #[cfg(test)]
 mod test {
-    use crate::data::{DbProvided, KataAsingItem, KonsepItem, LemmaItem};
+    use crate::data::{KataAsingItem, KonsepItem, LemmaItem};
     use crate::operations::DiffSumbittable;
     use crate::query::QueryView;
+    use crate::types::DbProvided;
     use sqlx::{Pool, Sqlite};
 
     // TODO implement handle_changes for LemmaDataRepr

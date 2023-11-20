@@ -1,25 +1,16 @@
 //! Exposed representations of data from database.
-//!
-//! Five data is available for external consumption:
-//! 1. Lemma
-//! 2. Konsep
-//! 3. GolonganKata
-//! 4. Cakupan
-//! 5. KataAsing
-
-// #[macro_use]
-// mod export;
 
 use async_trait::async_trait;
 use itertools::Itertools;
-use ormlite::{model::Insertable, Model, Result, TableMeta};
-use sqlx::Sqlite;
+use ormlite::model::Insertable;
+use ormlite::Model;
 use std::{collections::HashMap, fmt::Debug};
-use ts_rs::TS;
 
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    errors::{BackendError, Result},
+    insertions::{ReferenceItem, ToTable, ToTableWithReference},
     models::{
         cakupan::{Cakupan, InsertCakupan},
         cakupan_x_konsep::CakupanXKonsep,
@@ -28,7 +19,9 @@ use crate::{
         kata_asing_x_konsep::KataAsingXKonsep,
         konsep::{InsertKonsep, Konsep},
         lemma::{InsertLemma, Lemma},
+        JointTable,
     },
+    types::DbProvided,
     views::LemmaWithKonsepView,
 };
 
@@ -41,78 +34,6 @@ pub struct LemmaItem {
     pub id: DbProvided<i32>,
     pub lemma: String,
     pub konseps: Vec<KonsepItem>,
-}
-
-// struct AuxillaryItem<L, R>(L, R)
-// where
-//     L: TS + Debug + PartialEq,
-//     R: TS + Debug + PartialEq;
-
-// #[async_trait]
-// impl ToTable<sqlx::Sqlite> for AuxillaryItem<i32, i32> {
-//     type INSERT = CakupanXKonsep;
-
-//     async fn insert_safe(
-//         self,
-//         pool: &sqlx::Pool<sqlx::Sqlite>,
-//     ) -> Result<<Self::INSERT as Insertable<sqlx::Sqlite>>::Model> {
-//         CakupanXKonsep::insert(self, conn)
-//     }
-// }
-// #[async_trait]
-// impl ToTable<sqlx::Sqlite> for AuxillaryItem<i32, i32> {
-//     type INSERT = KataAsingXKonsep;
-
-//     async fn insert_safe(
-//         self,
-//         pool: &sqlx::Pool<sqlx::Sqlite>,
-//     ) -> Result<<Self::INSERT as Insertable<sqlx::Sqlite>>::Model> {
-//         todo!()
-//     }
-// }
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, diff::Diff)]
-#[diff(attr(
-    #[derive(Debug)]
-))]
-pub enum DbProvided<T>
-where
-    T: TS + Debug + PartialEq + diff::Diff,
-    <T as diff::Diff>::Repr: Debug,
-{
-    Known(T),
-    Unknown,
-}
-
-/// IdentInDB<T> acts like an option in JS/TS
-impl<T> TS for DbProvided<T>
-where
-    T: TS + Debug + PartialEq + diff::Diff,
-    <T as diff::Diff>::Repr: Debug,
-{
-    fn name() -> String {
-        <Option<T> as TS>::name()
-    }
-
-    fn dependencies() -> Vec<ts_rs::Dependency> {
-        <Option<T> as TS>::dependencies()
-    }
-
-    fn transparent() -> bool {
-        <Option<T> as TS>::transparent()
-    }
-
-    fn name_with_type_args(args: Vec<String>) -> String {
-        <Option<T> as TS>::name_with_type_args(args)
-    }
-
-    fn inline() -> String {
-        <Option<T> as TS>::inline()
-    }
-
-    fn inline_flattened() -> String {
-        <Option<T> as TS>::inline_flattened()
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, diff::Diff, ts_rs::TS)]
@@ -156,10 +77,6 @@ pub struct KataAsingItem {
     pub bahasa: String,
 }
 
-pub trait ReferenceItem {
-    type FIELD;
-    fn reference_field(&self) -> Self::FIELD;
-}
 impl ReferenceItem for LemmaItem {
     type FIELD = i32;
     fn reference_field(&self) -> Self::FIELD {
@@ -180,35 +97,9 @@ impl ReferenceItem for KonsepItem {
 }
 
 #[async_trait]
-pub trait ToTable<DB: sqlx::Database> {
-    type INSERT: Insertable<DB> + Sized + Send + Sync;
-
-    /// Insert values while checking for duplicates
-    async fn insert_safe(
-        self,
-        pool: &sqlx::Pool<DB>,
-    ) -> Result<<Self::INSERT as Insertable<DB>>::Model>;
-}
-#[async_trait]
-pub trait ToTableWithReference<DB: sqlx::Database> {
-    type INSERT: Insertable<DB> + Sized + Send + Sync;
-    type REFERENCE: ReferenceItem;
-
-    /// Insert values while checking for duplicates with referred value from `reference`.
-    async fn insert_safe_with_reference(
-        self,
-        reference: &Self::REFERENCE,
-        pool: &sqlx::Pool<DB>,
-    ) -> Result<<Self::INSERT as Insertable<DB>>::Model>;
-}
-
-#[async_trait]
 impl ToTable<sqlx::Sqlite> for LemmaItem {
-    type INSERT = InsertLemma;
-    async fn insert_safe(
-        self,
-        pool: &sqlx::Pool<Sqlite>,
-    ) -> Result<<Self::INSERT as Insertable<sqlx::Sqlite>>::Model> {
+    type OUTPUT = Lemma;
+    async fn insert_safe(self, pool: &sqlx::Pool<sqlx::Sqlite>) -> Result<Lemma> {
         let lemma = match self.id {
             DbProvided::Known(v) => {
                 Lemma::select()
@@ -244,57 +135,52 @@ impl ToTable<sqlx::Sqlite> for LemmaItem {
 
 #[async_trait]
 impl ToTable<sqlx::Sqlite> for CakupanItem {
-    type INSERT = InsertCakupan;
+    type OUTPUT = Cakupan;
 
-    async fn insert_safe(
-        self,
-        pool: &sqlx::Pool<sqlx::Sqlite>,
-    ) -> Result<<Self::INSERT as Insertable<sqlx::Sqlite>>::Model> {
+    async fn insert_safe(self, pool: &sqlx::Pool<sqlx::Sqlite>) -> Result<Cakupan> {
         match Cakupan::select()
             .where_bind("nama = ?", &self.0)
             .fetch_optional(pool)
             .await?
         {
             Some(c) => Ok(c),
-            None => {
-                InsertCakupan {
-                    nama: self.0.clone(),
-                    keterangan: None,
-                }
-                .insert(pool)
-                .await
+            None => InsertCakupan {
+                nama: self.0.clone(),
+                keterangan: None,
             }
+            .insert(pool)
+            .await
+            .map_err(BackendError::from),
         }
     }
 }
 
 #[async_trait]
 impl ToTableWithReference<sqlx::Sqlite> for CakupanItem {
-    type INSERT = InsertCakupan;
+    type OUTPUT = Cakupan;
     type REFERENCE = KonsepItem;
 
     async fn insert_safe_with_reference(
         self,
         reference: &Self::REFERENCE,
         pool: &sqlx::Pool<sqlx::Sqlite>,
-    ) -> Result<<Self::INSERT as Insertable<sqlx::Sqlite>>::Model> {
+    ) -> Result<Cakupan> {
         let cakupan = <Self as ToTable<sqlx::Sqlite>>::insert_safe(self, pool).await?;
         CakupanXKonsep {
             cakupan_id: cakupan.id,
             konsep_id: reference.reference_field(),
         }
-        .insert_safe(pool)?;
+        .insert_safe(pool)
+        .await
+        .map_err(BackendError::from);
         Ok(cakupan)
     }
 }
 #[async_trait]
 impl ToTable<sqlx::Sqlite> for KataAsingItem {
-    type INSERT = InsertKataAsing;
+    type OUTPUT = KataAsing;
 
-    async fn insert_safe(
-        self,
-        pool: &sqlx::Pool<sqlx::Sqlite>,
-    ) -> Result<<Self::INSERT as Insertable<sqlx::Sqlite>>::Model> {
+    async fn insert_safe(self, pool: &sqlx::Pool<sqlx::Sqlite>) -> Result<KataAsing> {
         match KataAsing::select()
             .where_("nama = ? AND bahasa = ?")
             .bind(&self.nama)
@@ -303,50 +189,50 @@ impl ToTable<sqlx::Sqlite> for KataAsingItem {
             .await?
         {
             Some(c) => Ok(c),
-            None => {
-                InsertKataAsing {
-                    nama: self.nama.clone(),
-                    bahasa: self.bahasa.clone(),
-                }
-                .insert(pool)
-                .await
+            None => InsertKataAsing {
+                nama: self.nama.clone(),
+                bahasa: self.bahasa.clone(),
             }
+            .insert(pool)
+            .await
+            .map_err(BackendError::from),
         }
     }
 }
 
 #[async_trait]
 impl ToTableWithReference<sqlx::Sqlite> for KataAsingItem {
-    type INSERT = InsertKataAsing;
+    type OUTPUT = KataAsing;
     type REFERENCE = KonsepItem;
 
     async fn insert_safe_with_reference(
         self,
         reference: &Self::REFERENCE,
         pool: &sqlx::Pool<sqlx::Sqlite>,
-    ) -> Result<<Self::INSERT as Insertable<sqlx::Sqlite>>::Model> {
+    ) -> Result<KataAsing> {
         let kata_asing = <Self as ToTable<sqlx::Sqlite>>::insert_safe(self, pool).await?;
         KataAsingXKonsep {
             konsep_id: reference.reference_field(),
             kata_asing_id: kata_asing.id,
         }
-        .insert_safe(pool)?;
+        .insert_safe(pool)
+        .await
+        .map_err(BackendError::from);
         Ok(kata_asing)
     }
 }
 
-// use ormlite
-
 #[async_trait]
 impl ToTableWithReference<sqlx::Sqlite> for KonsepItem {
-    type INSERT = InsertKonsep;
+    type OUTPUT = Konsep;
     type REFERENCE = LemmaItem;
 
+    #[allow(unreachable_code)]
     async fn insert_safe_with_reference(
         self,
         reference: &Self::REFERENCE,
-        pool: &sqlx::Pool<Sqlite>,
-    ) -> Result<<Self::INSERT as Insertable<sqlx::Sqlite>>::Model> {
+        pool: &sqlx::Pool<sqlx::Sqlite>,
+    ) -> Result<Konsep> {
         let konsep = match self.id {
             DbProvided::Known(v) => {
                 todo!("So apparently this part throws `RowNotFound` error. Investigate.");
@@ -364,7 +250,7 @@ impl ToTableWithReference<sqlx::Sqlite> for KonsepItem {
                         .where_bind("id = ?", &self.golongan_kata)
                         .fetch_one(pool)
                         .await?;
-                    Self::INSERT {
+                    InsertKonsep {
                         lemma_id: reference.reference_field(),
                         golongan_id: golkat.id,
                         keterangan: Some(self.keterangan.clone()),

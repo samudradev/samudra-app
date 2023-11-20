@@ -1,3 +1,4 @@
+use crate::models::JointTable;
 use ormlite::Model;
 use serde::{Deserialize, Serialize};
 
@@ -10,13 +11,11 @@ pub struct KataAsingXKonsep {
     pub kata_asing_id: i32,
 }
 
-impl KataAsingXKonsep {
-    pub fn insert_safe(self, pool: &sqlx::Pool<sqlx::Sqlite>) -> sqlx::Result<Self> {
-        Ok(self
-            .insert(pool)
-            .on_conflict(ormlite::query_builder::OnConflict::Ignore)
-            .model)
-    }
+impl<DB> JointTable<DB> for KataAsingXKonsep
+where
+    DB: sqlx::Database,
+    Self: Model<DB>,
+{
 }
 
 #[derive(Copy, Clone, Debug)]

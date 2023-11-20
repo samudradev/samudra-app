@@ -1,6 +1,6 @@
-use ormlite::{model::Insertable, Model};
+use crate::models::JointTable;
+use ormlite::Model;
 use serde::{Deserialize, Serialize};
-use sqlx::Database;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Model)]
 #[ormlite(table = "cakupan_x_konsep")]
@@ -11,13 +11,11 @@ pub struct CakupanXKonsep {
     pub cakupan_id: i32,
 }
 
-impl CakupanXKonsep {
-    pub fn insert_safe(self, pool: &sqlx::Pool<sqlx::Sqlite>) -> sqlx::Result<Self> {
-        Ok(self
-            .insert(pool)
-            .on_conflict(ormlite::query_builder::OnConflict::Ignore)
-            .model)
-    }
+impl<DB> JointTable<DB> for CakupanXKonsep
+where
+    DB: sqlx::Database,
+    Self: Model<DB>,
+{
 }
 
 #[derive(Copy, Clone, Debug)]

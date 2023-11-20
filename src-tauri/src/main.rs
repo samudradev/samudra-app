@@ -42,17 +42,18 @@ async fn insert_single_value(
     konsep: String,
 ) -> Result<(), String> {
     let conn = config.get_active_database().await.pool;
-    match (database::io::RowValue { lemma, konsep })
-        .insert(&conn)
-        .await
-    {
-        Ok(_msg) => MessageDialogBuilder::new("Success!".to_string(), "Success".to_string())
-            .kind(MessageDialogKind::Info)
-            .show(|_a| {}),
-        Err(e) => MessageDialogBuilder::new("Failure!".to_string(), e.to_string())
-            .kind(MessageDialogKind::Error)
-            .show(|_a| {}),
-    }
+    todo!("CSV");
+    // match (database::io::RowValue { lemma, konsep })
+    //     .insert(&conn)
+    //     .await
+    // {
+    //     Ok(_msg) => MessageDialogBuilder::new("Success!".to_string(), "Success".to_string())
+    //         .kind(MessageDialogKind::Info)
+    //         .show(|_a| {}),
+    //     Err(e) => MessageDialogBuilder::new("Failure!".to_string(), e.to_string())
+    //         .kind(MessageDialogKind::Error)
+    //         .show(|_a| {}),
+    // }
     Ok(())
 }
 

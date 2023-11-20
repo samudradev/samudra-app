@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use sqlx::{migrate::MigrateDatabase, Database, Sqlite};
+use sqlx::{migrate::MigrateDatabase, Sqlite};
 
 #[derive(Debug, Clone)]
 pub struct ActiveDatabase {

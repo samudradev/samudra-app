@@ -14,8 +14,9 @@ pub struct LemmaWithKonsepView {
 #[cfg(test)]
 mod test {
 
-    use crate::data::{DbProvided, KataAsingItem, KonsepItem, LemmaItem};
+    use crate::data::{KataAsingItem, KonsepItem, LemmaItem};
     use crate::query::{QueryParams, QueryView};
+    use crate::types::DbProvided;
     use crate::views::LemmaWithKonsepView;
     use itertools::Itertools;
 
