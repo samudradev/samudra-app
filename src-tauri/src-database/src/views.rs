@@ -13,7 +13,7 @@ pub struct LemmaWithKonsepView {
 
 #[cfg(test)]
 mod test {
-
+    use crate::data::Item;
     use crate::data::{KataAsingItem, KonsepItem, LemmaItem};
     use crate::query::{QueryParams, QueryView};
     use crate::types::DbProvided;
@@ -23,7 +23,7 @@ mod test {
     #[sqlx::test(fixtures("lemma", "lemma_2"))]
     fn test_lemma_w_konsep_view(pool: sqlx::Pool<sqlx::Sqlite>) {
         let views: Vec<LemmaWithKonsepView> = QueryView::new().all(&pool).await.unwrap();
-        let mut data = dbg!(LemmaItem::from_views(views)
+        let mut data = dbg!(LemmaItem::from_views(&views)
             .into_iter()
             .sorted_by(|a, b| a.lemma.cmp(&b.lemma)));
         assert_eq!(
@@ -78,7 +78,7 @@ mod test {
     fn test_lemma_w_empty_konsep_view(pool: sqlx::Pool<sqlx::Sqlite>) {
         let param = QueryParams::either("cakera tokokan".into(), "".into());
         let views: Vec<LemmaWithKonsepView> = QueryView::new().with(param, &pool).await.unwrap();
-        let mut data = dbg!(LemmaItem::from_views(views)
+        let mut data = dbg!(LemmaItem::from_views(&views)
             .into_iter()
             .sorted_by(|a, b| a.lemma.cmp(&b.lemma)));
         assert_eq!(

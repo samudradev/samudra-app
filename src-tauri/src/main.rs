@@ -14,7 +14,7 @@ use tauri::api::dialog::MessageDialogKind;
 use tauri::State;
 
 use database;
-use database::data::LemmaItem;
+use database::data::{Item, LemmaItem};
 use database::query::{QueryParams, QueryView};
 
 // TODO create insert trait
@@ -104,7 +104,7 @@ async fn get(config: State<'_, AppConfig>, lemma: &str) -> Result<Vec<LemmaItem>
         .with(QueryParams::either(lemma.into(), "".into()), &conn)
         .await
         .unwrap();
-    Ok(dbg!(LemmaItem::from_views(views)))
+    Ok(dbg!(LemmaItem::from_views(&views)))
 }
 
 /// Submit lemma changes to database

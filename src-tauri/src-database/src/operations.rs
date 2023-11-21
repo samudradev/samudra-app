@@ -33,6 +33,7 @@ impl DiffSumbittable<sqlx::Sqlite> for LemmaItem {
 
 #[cfg(test)]
 mod test {
+    use crate::data::items::lemma::Item;
     use crate::data::{KataAsingItem, KonsepItem, LemmaItem};
     use crate::operations::DiffSumbittable;
     use crate::query::QueryView;
@@ -43,7 +44,7 @@ mod test {
     #[sqlx::test(fixtures("lemma"))]
     fn test_diff_handling(pool: Pool<Sqlite>) -> Result<(), sqlx::Error> {
         let view = QueryView::new().all(&pool).await?;
-        let data = LemmaItem::from_views(view);
+        let data = LemmaItem::from_views(&view);
         let _old = data
             .first()
             .expect("Vec<LemmaDataRepr> is zero sized")
@@ -80,7 +81,7 @@ mod test {
         };
         _old.submit_changes(&_new, &pool).await?;
         let view = QueryView::new().all(&pool).await?;
-        let data = LemmaItem::from_views(view);
+        let data = LemmaItem::from_views(&view);
         assert_eq!(data.first().expect("Here?").konseps.len(), 2);
         Ok(())
     }
