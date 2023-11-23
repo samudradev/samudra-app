@@ -1,7 +1,5 @@
 use std::{error::Error, fmt::Display};
 
-use sqlx::error::DatabaseError;
-
 pub(crate) type Result<T> = std::result::Result<T, BackendError>;
 
 #[derive(Debug)]
@@ -9,9 +7,9 @@ pub struct BackendError {
     pub message: String,
 }
 
-impl DatabaseError for BackendError {
+impl sqlx::error::DatabaseError for BackendError {
     fn message(&self) -> &str {
-        todo!()
+        self.message()
     }
 
     fn as_error(&self) -> &(dyn Error + Send + Sync + 'static) {
@@ -54,6 +52,14 @@ impl From<ormlite::Error> for BackendError {
 }
 impl From<csv::Error> for BackendError {
     fn from(value: csv::Error) -> Self {
+        BackendError {
+            message: value.to_string(),
+        }
+    }
+}
+
+impl From<sqlx::migrate::MigrateError> for BackendError {
+    fn from(value: sqlx::migrate::MigrateError) -> Self {
         BackendError {
             message: value.to_string(),
         }

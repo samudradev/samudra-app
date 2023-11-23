@@ -40,7 +40,6 @@ mod test {
     use crate::types::DbProvided;
     use sqlx::{Pool, Sqlite};
 
-    // TODO implement handle_changes for LemmaDataRepr
     #[sqlx::test(fixtures("lemma"))]
     fn test_diff_handling(pool: Pool<Sqlite>) -> Result<(), sqlx::Error> {
         let view = QueryView::new().all(&pool).await?;

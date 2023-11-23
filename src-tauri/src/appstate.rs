@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use tauri::api::path;
 
-pub use database::states::{ActiveDatabase, DatabaseConfig};
+pub use database::states::{Connection, DatabaseConfig};
 
 #[derive(Debug)]
 pub struct AppPaths {
@@ -21,13 +21,13 @@ pub struct AppConfig {
 }
 
 impl AppConfig {
-    pub async fn get_active_database(&self) -> ActiveDatabase {
+    pub async fn get_active_database(&self) -> Connection {
         let mut hashmap = HashMap::<String, DatabaseConfig>::new();
         for (k, v) in self.databases.lock().unwrap().iter() {
             hashmap.insert(k.clone(), v.clone());
         }
         let name = &self.active.lock().unwrap().to_string();
-        ActiveDatabase::from(hashmap.get(name).unwrap().clone()).await
+        Connection::from(hashmap.get(name).unwrap().clone()).await
     }
     pub fn from_toml(file: &Path) -> AppConfig {
         match file.exists() {
