@@ -122,7 +122,7 @@ async fn submit_changes(
 /// The entrypoint of this tauri app
 #[tokio::main]
 async fn main() {
-    let paths = appstate::AppPaths::default();
+    let paths = appstate::AppPaths::default().initialize_root_dir();
     let config = appstate::AppConfig::from(&paths);
     tauri::Builder::default()
         .menu(menu::MenuBar::default().as_menu())

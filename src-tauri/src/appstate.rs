@@ -22,19 +22,27 @@ pub struct DatabaseConfig {
 
 impl DatabaseConfig {
     pub fn in_storage(name: String, apppaths: &AppPaths) -> DatabaseConfig {
+        let base = apppaths.storage_dir().join(name);
+        if !base.exists() {
+            std::fs::create_dir(&base).unwrap();
+        }
         Self {
-            path: apppaths
-                .storage_dir()
-                .join(name)
-                .join("samudra.db")
-                .to_str()
-                .unwrap()
-                .into(),
+            path: base.join("samudra.db").to_str().unwrap().into(),
             engine: "sqlite".into(),
         }
     }
 }
 
+/// Represents the data in `databases.toml`
+///
+/// The default is initialized with [`AppConfig::fallback`]:
+/// ```toml
+/// active = "default"
+///
+/// [databases.default]
+/// path = "root/storage/default/samudra.db"
+/// engine = "sqlite"
+/// ```
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AppConfig {
     active: Mutex<String>,
@@ -43,7 +51,7 @@ pub struct AppConfig {
 
 impl From<&AppPaths> for AppConfig {
     fn from(value: &AppPaths) -> Self {
-        match value.databases_toml().exists() {
+        match dbg!(value.databases_toml().exists()) {
             true => {
                 let contents = match fs::read_to_string(value.databases_toml()) {
                     Ok(c) => c,
@@ -73,51 +81,42 @@ impl From<&AppPaths> for AppConfig {
 }
 
 impl AppConfig {
-    pub fn fallback(value: &AppPaths) -> AppConfig {
-        let mut databases = HashMap::new();
-        databases.insert(
-            "default".into(),
-            DatabaseConfig::in_storage("default".into(), value),
-        );
+    fn null() -> Self {
         Self {
-            active: String::from("default").into(),
-            databases: databases.into(),
+            active: "".to_string().into(),
+            databases: HashMap::new().into(),
         }
     }
+
+    /// Sets the default value with the provided path.
+    pub fn fallback(paths: &AppPaths) -> AppConfig {
+        let config = Self::null();
+        let _ = config.register_database("default".into(), paths);
+        let _ = config.set_active("default".into());
+        let _ = config.to_toml(&paths.databases_toml());
+        config
+    }
+
     pub async fn connection(&self) -> Pool<Sqlite> {
         Connection::from(self.get_active_database_url()).await.pool
     }
+
     pub fn get_active_database_url(&self) -> String {
-        let mut hashmap = HashMap::<String, DatabaseConfig>::new();
-        for (k, v) in self.databases.lock().unwrap().iter() {
-            hashmap.insert(k.clone(), v.clone());
-        }
         let name = &self.active.lock().unwrap().to_string();
+        let hashmap = dbg!(self.databases.lock().unwrap());
         hashmap.get(&name.clone()).unwrap().path.clone()
     }
 
     pub fn to_toml(&self, file: &Path) -> Result<(), std::io::Error> {
-        let mut file_buf = fs::OpenOptions::new().write(true).open(file)?;
-        file_buf.write_all(toml::to_string_pretty(self).unwrap().as_bytes())?;
-        Ok(())
+        let mut file_buf = fs::OpenOptions::new().write(true).create(true).open(file)?;
+        file_buf.write_all(toml::to_string_pretty(self).unwrap().as_bytes())
     }
 
-    /// Currently only accepting default storage location
     pub fn register_database(&self, name: String, paths: &AppPaths) -> Result<(), tauri::Error> {
-        let mut db_map = self.databases.lock().unwrap();
-
-        db_map.insert(
+        self.databases.lock().unwrap().insert(
             name.clone(),
             DatabaseConfig::in_storage(name.clone(), paths),
         );
-
-        let db = db_map.get(&name).unwrap();
-
-        tauri::async_runtime::block_on(async move {
-            Connection::create_and_migrate(db.path.clone())
-                .await
-                .unwrap();
-        });
         Ok(())
     }
 
@@ -127,7 +126,7 @@ impl AppConfig {
                 *self.active.lock().unwrap() = name.into();
                 Ok(self)
             }
-            None => Err("Error".to_string()),
+            None => Err(format!("Error while accessing the active name `{}`.", name)),
         }
     }
 }
@@ -143,6 +142,15 @@ impl Default for AppPaths {
 }
 
 impl AppPaths {
+    pub fn initialize_root_dir(self) -> Self {
+        if !&self.root.exists() {
+            std::fs::create_dir(&self.root).unwrap();
+        }
+        if !&self.storage_dir().exists() {
+            std::fs::create_dir(&self.storage_dir()).unwrap();
+        }
+        self
+    }
     pub fn databases_toml(&self) -> PathBuf {
         PathBuf::from_iter([self.root.clone(), "databases.toml".into()])
     }

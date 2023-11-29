@@ -18,8 +18,9 @@ impl Connection {
     }
 
     pub async fn from(url: String) -> Self {
-        Self {
-            pool: sqlx::SqlitePool::connect(&url).await.unwrap(),
+        match sqlx::SqlitePool::connect(&url).await {
+            Ok(pool) => Self { pool },
+            Err(_) => dbg!(Self::create_and_migrate(url).await).unwrap(),
         }
     }
 
