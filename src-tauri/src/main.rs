@@ -17,8 +17,7 @@ use database;
 use database::data::{Item, LemmaItem};
 use database::query::{QueryParams, QueryView};
 
-// TODO create insert trait
-// TODO Show config
+// TODO Create GUI for insert new lemma.
 
 /// Exposes the active database URL to the frontend.
 #[tauri::command(async)]
