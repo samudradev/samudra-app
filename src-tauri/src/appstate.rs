@@ -5,13 +5,34 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use tauri::api::path;
+use tauri::App;
 
-pub use database::states::{Connection, DatabaseConfig};
+pub use database::states::*;
 
 #[derive(Debug)]
 pub struct AppPaths {
-    pub user_home: PathBuf,
-    pub config_home: PathBuf,
+    pub root: PathBuf,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct DatabaseConfig {
+    path: String,
+    engine: String,
+}
+
+impl DatabaseConfig {
+    pub fn in_storage(name: String, apppaths: &AppPaths) -> DatabaseConfig {
+        Self {
+            path: apppaths
+                .storage_dir()
+                .join(name)
+                .join("samudra.db")
+                .to_str()
+                .unwrap()
+                .into(),
+            engine: "sqlite".into(),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -20,28 +41,59 @@ pub struct AppConfig {
     databases: Mutex<HashMap<String, DatabaseConfig>>,
 }
 
-impl AppConfig {
-    pub async fn get_active_database(&self) -> Connection {
-        let mut hashmap = HashMap::<String, DatabaseConfig>::new();
-        for (k, v) in self.databases.lock().unwrap().iter() {
-            hashmap.insert(k.clone(), v.clone());
-        }
-        let name = &self.active.lock().unwrap().to_string();
-        Connection::from(hashmap.get(name).unwrap().clone()).await
-    }
-    pub fn from_toml(file: &Path) -> AppConfig {
-        match file.exists() {
+impl From<&AppPaths> for AppConfig {
+    fn from(value: &AppPaths) -> Self {
+        match value.databases_toml().exists() {
             true => {
-                let contents = match fs::read_to_string(file) {
+                let contents = match fs::read_to_string(value.databases_toml()) {
                     Ok(c) => c,
                     Err(e) => {
                         todo!("{}", e)
                     }
                 };
-                toml::from_str(&contents).unwrap()
+                match toml::from_str(&contents) {
+                    Ok(c) => c,
+                    Err(E) => {
+                        println!("An error occured while reading `./databases.toml`. Please check `./databases.bak.toml`.\n{}", E);
+                        std::fs::copy(
+                            value.databases_toml(),
+                            PathBuf::from_iter(vec![
+                                value.root.clone(),
+                                "databases.bak.toml".into(),
+                            ]),
+                        )
+                        .expect("Error occured while copying backup configuration.");
+                        Self::fallback(&value)
+                    }
+                }
             }
-            false => AppConfig::default(),
+            false => Self::fallback(&value),
         }
+    }
+}
+
+impl AppConfig {
+    pub fn fallback(value: &AppPaths) -> AppConfig {
+        let mut databases = HashMap::new();
+        databases.insert(
+            "default".into(),
+            DatabaseConfig::in_storage("default".into(), value),
+        );
+        Self {
+            active: String::from("default").into(),
+            databases: databases.into(),
+        }
+    }
+    pub async fn connection(&self) -> Pool<Sqlite> {
+        Connection::from(self.get_active_database_url()).await.pool
+    }
+    pub fn get_active_database_url(&self) -> String {
+        let mut hashmap = HashMap::<String, DatabaseConfig>::new();
+        for (k, v) in self.databases.lock().unwrap().iter() {
+            hashmap.insert(k.clone(), v.clone());
+        }
+        let name = &self.active.lock().unwrap().to_string();
+        hashmap.get(&name.clone()).unwrap().path.clone()
     }
 
     pub fn to_toml(&self, file: &Path) -> Result<(), std::io::Error> {
@@ -50,18 +102,21 @@ impl AppConfig {
         Ok(())
     }
 
-    pub fn register_database(
-        &self,
-        name: String,
-        database: DatabaseConfig,
-    ) -> Result<(), tauri::Error> {
-        self.databases
-            .lock()
-            .unwrap()
-            .insert(name, database.clone());
+    /// Currently only accepting default storage location
+    pub fn register_database(&self, name: String, paths: &AppPaths) -> Result<(), tauri::Error> {
+        let mut db_map = self.databases.lock().unwrap();
+
+        db_map.insert(
+            name.clone(),
+            DatabaseConfig::in_storage(name.clone(), paths),
+        );
+
+        let db = db_map.get(&name).unwrap();
 
         tauri::async_runtime::block_on(async move {
-            database.create_and_migrate().await.unwrap();
+            Connection::create_and_migrate(db.path.clone())
+                .await
+                .unwrap();
         });
         Ok(())
     }
@@ -79,18 +134,20 @@ impl AppConfig {
 
 impl Default for AppPaths {
     fn default() -> Self {
-        let user_home = path::home_dir().unwrap();
-        let config_home = user_home.as_path().join(".samudra/databases.toml");
         AppPaths {
-            user_home,
-            config_home,
+            root: path::document_dir()
+                .unwrap_or(path::home_dir().unwrap())
+                .join("Samudra"),
         }
     }
 }
 
-impl Default for AppConfig {
-    fn default() -> Self {
-        // TODO Set default values and make `from_toml` depend on default instead.
-        AppConfig::from_toml(AppPaths::default().config_home.as_path())
+impl AppPaths {
+    pub fn databases_toml(&self) -> PathBuf {
+        PathBuf::from_iter([self.root.clone(), "databases.toml".into()])
+    }
+
+    pub fn storage_dir(&self) -> PathBuf {
+        PathBuf::from_iter([self.root.clone(), "storage".into()])
     }
 }

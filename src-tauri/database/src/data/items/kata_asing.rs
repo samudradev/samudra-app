@@ -1,13 +1,7 @@
-use crate::data::items::konsep::KonsepItem;
-use crate::errors::{BackendError, Result};
-use crate::insertions::ReferenceItem;
-use crate::insertions::{ToTable, ToTableWithReference};
+use crate::prelude::*;
+
 use crate::models::kata_asing::{InsertKataAsing, KataAsing};
 use crate::models::kata_asing_x_konsep::KataAsingXKonsep;
-use crate::models::JointTable;
-
-use ormlite::model::Insertable;
-use ormlite::Model;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, diff::Diff, ts_rs::TS)]
 #[ts(export, export_to = "../../src/bindings/")]

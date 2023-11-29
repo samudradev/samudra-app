@@ -1,11 +1,14 @@
 use serde::{Deserialize, Serialize};
-use sqlx::{migrate::MigrateDatabase, Sqlite};
+use sqlx::migrate::MigrateDatabase;
 
 use crate::errors::Result;
 
+pub use sqlx::Pool;
+pub use sqlx::Sqlite;
+
 #[derive(Debug, Clone)]
 pub struct Connection {
-    pub pool: sqlx::Pool<Sqlite>,
+    pub pool: Pool<Sqlite>,
 }
 
 impl Connection {

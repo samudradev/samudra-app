@@ -1,15 +1,6 @@
-use crate::data::items::kata_asing::KataAsingItem;
-use crate::data::items::konsep::KonsepItem;
-use crate::errors::Result;
-use crate::insertions::{ReferenceItem, ToTable, ToTableWithReference};
-use crate::models::lemma::{InsertLemma, Lemma};
-use crate::types::DbProvided;
-use crate::views::LemmaWithKonsepView;
-use std::collections::HashMap;
+use crate::prelude::*;
 
-use itertools::Itertools;
-use ormlite::model::Insertable;
-use ormlite::Model;
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, diff::Diff, ts_rs::TS)]
 #[ts(export, export_to = "../../src/bindings/")]

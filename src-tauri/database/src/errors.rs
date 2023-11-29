@@ -9,7 +9,7 @@ pub struct BackendError {
 
 impl sqlx::error::DatabaseError for BackendError {
     fn message(&self) -> &str {
-        self.message()
+        &self.message
     }
 
     fn as_error(&self) -> &(dyn Error + Send + Sync + 'static) {

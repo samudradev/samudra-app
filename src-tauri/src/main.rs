@@ -23,7 +23,7 @@ use database::query::{QueryParams, QueryView};
 /// Exposes the active database URL to the frontend.
 #[tauri::command(async)]
 async fn active_database_url(config: State<'_, AppConfig>) -> Result<String, String> {
-    Ok(config.get_active_database().await.path)
+    Ok(config.get_active_database_url())
 }
 
 // TODO Show database statistic
@@ -41,7 +41,7 @@ async fn insert_single_value(
     lemma: String,
     konsep: String,
 ) -> Result<(), String> {
-    let conn = config.get_active_database().await.pool;
+    let conn = config.connection().await;
     todo!("CSV");
     // match (database::io::RowValue { lemma, konsep })
     //     .insert(&conn)
@@ -99,7 +99,7 @@ async fn import_from_csv(_config: State<'_, AppConfig>, _path: String) -> Result
 /// Get a vector of [`LemmaItem`] that matches the argument.
 #[tauri::command(async)]
 async fn get(config: State<'_, AppConfig>, lemma: &str) -> Result<Vec<LemmaItem>, String> {
-    let conn = config.get_active_database().await.pool;
+    let conn = config.connection().await;
     let views = QueryView::new()
         .with(QueryParams::either(lemma.into(), "".into()), &conn)
         .await
@@ -114,7 +114,7 @@ async fn submit_changes(
     _old: LemmaItem,
     _new: LemmaItem,
 ) -> Result<(), String> {
-    let _db = config.get_active_database().await.pool;
+    let _db = config.connection().await;
     // database::operations::handle_changes(&old, &new, &db).await
     todo!()
 }
@@ -122,11 +122,13 @@ async fn submit_changes(
 /// The entrypoint of this tauri app
 #[tokio::main]
 async fn main() {
+    let paths = appstate::AppPaths::default();
+    let config = appstate::AppConfig::from(&paths);
     tauri::Builder::default()
         .menu(menu::MenuBar::default().as_menu())
         .on_menu_event(event::on_menu_event)
-        .manage(appstate::AppPaths::default())
-        .manage(appstate::AppConfig::default())
+        .manage(paths)
+        .manage(config)
         .invoke_handler(tauri::generate_handler![
             get,
             active_database_url,

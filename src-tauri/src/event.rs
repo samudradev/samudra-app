@@ -9,12 +9,13 @@ pub fn on_menu_event(event: WindowMenuEvent) -> () {
     }
 }
 
+// TODO CUrrently just handle in storage. Not arbitrary paths.
 fn handle_database_registration(event: WindowMenuEvent) -> () {
     let manager = event.window().app_handle();
 
     FileDialogBuilder::new()
         .set_title("Select folder to store database")
-        .set_directory(manager.state::<AppPaths>().user_home.as_path())
+        .set_directory(manager.state::<AppPaths>().root.as_path())
         .add_filter("SQLite Database", &["db", "sqlite", "sqlite3"])
         .pick_folder(move |a| match a {
             Some(folder) => {
@@ -27,17 +28,11 @@ fn handle_database_registration(event: WindowMenuEvent) -> () {
                     .to_str()
                     .unwrap()
                     .to_string();
-                conf.register_database(
-                    name.clone(),
-                    DatabaseConfig {
-                        path: folder.join("samudra.db").to_str().unwrap().to_string(),
-                        ..Default::default()
-                    },
-                )
-                .unwrap();
+                conf.register_database(name.clone(), &manager.state::<AppPaths>())
+                    .unwrap();
                 conf.set_active(name)
                     .unwrap()
-                    .to_toml(&manager.state::<AppPaths>().config_home.as_path())
+                    .to_toml(&manager.state::<AppPaths>().root.as_path())
                     .unwrap();
                 manager
                     .get_focused_window()

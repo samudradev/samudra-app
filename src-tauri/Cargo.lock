@@ -663,6 +663,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "database"
+version = "0.3.0"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "csv",
+ "diff-struct",
+ "itertools",
+ "ormlite",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "ts-rs",
+]
+
+[[package]]
 name = "der"
 version = "0.7.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2915,10 +2931,10 @@ name = "samudra"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "database",
  "futures",
  "serde",
  "serde_json",
- "src-database",
  "tauri",
  "tauri-build",
  "tokio",
@@ -3457,22 +3473,6 @@ dependencies = [
  "sqlx-core",
  "tracing",
  "url",
-]
-
-[[package]]
-name = "src-database"
-version = "0.3.0"
-dependencies = [
- "async-trait",
- "chrono",
- "csv",
- "diff-struct",
- "itertools",
- "ormlite",
- "serde",
- "serde_json",
- "sqlx",
- "ts-rs",
 ]
 
 [[package]]

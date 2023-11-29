@@ -1,14 +1,10 @@
+use crate::prelude::*;
+
 use crate::data::items::cakupan::CakupanItem;
-use crate::data::items::kata_asing::KataAsingItem;
 use crate::data::items::lemma::LemmaItem;
-use crate::errors::Result;
-use crate::insertions::{ReferenceItem, ToTableWithReference};
+
 use crate::models::golongan_kata::GolonganKata;
 use crate::models::konsep::{InsertKonsep, Konsep};
-use crate::types::DbProvided;
-
-use ormlite::model::Insertable;
-use ormlite::Model;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, diff::Diff, ts_rs::TS)]
 #[ts(export, export_to = "../../src/bindings/")]
