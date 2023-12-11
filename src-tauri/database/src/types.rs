@@ -2,6 +2,7 @@
 #[diff(attr(
     #[derive(Debug)]
 ))]
+#[serde(untagged)]
 pub enum DbProvided<T>
 where
     T: ts_rs::TS + core::fmt::Debug + PartialEq + diff::Diff,
@@ -9,6 +10,19 @@ where
 {
     Known(T),
     Unknown,
+}
+
+impl<T> From<Option<T>> for DbProvided<T>
+where
+    T: ts_rs::TS + core::fmt::Debug + PartialEq + diff::Diff,
+    <T as diff::Diff>::Repr: core::fmt::Debug,
+{
+    fn from(value: Option<T>) -> Self {
+        match value {
+            Some(T) => Self::Known(T),
+            None => Self::Unknown,
+        }
+    }
 }
 
 /// DbProvided<T> acts like an option in JS/TS

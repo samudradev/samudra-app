@@ -1,4 +1,4 @@
-use sqlx::{QueryBuilder, Sqlite};
+use sqlx::{query, QueryBuilder, Sqlite};
 
 use crate::views::LemmaWithKonsepView;
 
@@ -32,7 +32,8 @@ impl<'a> QueryView<'a, Sqlite> {
         }
     }
     pub async fn all(self, db: &sqlx::SqlitePool) -> sqlx::Result<Vec<LemmaWithKonsepView>> {
-        sqlx::query_as(self.query.sql()).fetch_all(db).await
+        let mut query = self.query;
+        query.build_query_as().fetch_all(db).await
     }
     pub async fn with(
         self,

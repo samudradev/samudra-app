@@ -5,27 +5,30 @@
   import { invoke } from "@tauri-apps/api";
 
   import LemmaStore from "./Data.js";
-  import DataCard from "./lib/Datacard.svelte";
+  import type { LemmaItem } from "./bindings/LemmaItem";
 
-  let data: LemmaData[] = [];
+  import DataCard from "./lib/Datacard.svelte";
+  import DataCardNew from "./lib/DataCardNew.svelte";
+
+  let data: LemmaItem[] = [];
 
   LemmaStore.subscribe((value) => {
     data = value;
-  })
+  });
 
-  async function import_csv() {
-    let selected = await open({
-      directory: false,
-      multiple: false,
-      filters: [{ name: "CSV", extensions: ["csv"] }],
-    });
-    console.log(selected);
-    // Refer the function in `main.rs` for the format of the csv
-    let result = await invoke("import_from_csv", {
-      path: selected,
-    });
-    console.log(result);
-  }
+  // async function import_csv() {
+  //   let selected = await open({
+  //     directory: false,
+  //     multiple: false,
+  //     filters: [{ name: "CSV", extensions: ["csv"] }],
+  //   });
+  //   console.log(selected);
+  //   // Refer the function in `main.rs` for the format of the csv
+  //   let result = await invoke("import_from_csv", {
+  //     path: selected,
+  //   });
+  //   console.log(result);
+  // }
 </script>
 
 <main>
@@ -34,14 +37,18 @@
       <div class="max-w-md">
         <h1 class="text-5xl font-bold pb-10">Samudra</h1>
         <SearchBar />
+        <!-- TODO Refresh button -->
       </div>
     </div>
   </hero>
+  {#if data.length == 0}
+    <DataCardNew />
+  {/if}
   <div class="justify-center grid">
-  {#each data as d}
-    <DataCard data={d} />
-  {/each}
+    {#each data as d}
+      <DataCard data={d} />
+    {/each}
   </div>
-<!--  <button on:click={import_csv}>Import from CSV</button>-->
+  <!--  <button on:click={import_csv}>Import from CSV</button>-->
   <Footer />
 </main>

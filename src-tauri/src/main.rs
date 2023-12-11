@@ -9,6 +9,7 @@ mod event;
 mod menu;
 
 use appstate::AppConfig;
+use database::insertions::ToTable;
 use tauri::api::dialog::MessageDialogBuilder;
 use tauri::api::dialog::MessageDialogKind;
 use tauri::State;
@@ -35,24 +36,9 @@ async fn active_database_url(config: State<'_, AppConfig>) -> Result<String, Str
 // ! TODO insert using LemmaItem
 /// Insert single value
 #[tauri::command(async)]
-async fn insert_single_value(
-    config: State<'_, AppConfig>,
-    lemma: String,
-    konsep: String,
-) -> Result<(), String> {
+async fn insert_lemma(config: State<'_, AppConfig>, item: LemmaItem) -> Result<(), String> {
     let conn = config.connection().await;
-    todo!("CSV");
-    // match (database::io::RowValue { lemma, konsep })
-    //     .insert(&conn)
-    //     .await
-    // {
-    //     Ok(_msg) => MessageDialogBuilder::new("Success!".to_string(), "Success".to_string())
-    //         .kind(MessageDialogKind::Info)
-    //         .show(|_a| {}),
-    //     Err(e) => MessageDialogBuilder::new("Failure!".to_string(), e.to_string())
-    //         .kind(MessageDialogKind::Error)
-    //         .show(|_a| {}),
-    // }
+    item.insert_safe(&conn).await.unwrap();
     Ok(())
 }
 
@@ -133,7 +119,7 @@ async fn main() {
             active_database_url,
             // count_lemma,
             import_from_csv,
-            insert_single_value,
+            insert_lemma,
             submit_changes
         ])
         .run(tauri::generate_context!())

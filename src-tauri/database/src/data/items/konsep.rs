@@ -55,7 +55,11 @@ impl ToTableWithReference<sqlx::Sqlite> for KonsepItem {
                     let golkat = GolonganKata::select()
                         .where_bind("id = ?", &self.golongan_kata)
                         .fetch_one(pool)
-                        .await?;
+                        .await
+                        .expect(&format!(
+                            "A row from 'golongan_kata' where id = '{}' is expected",
+                            self.golongan_kata
+                        ));
                     InsertKonsep {
                         lemma_id: reference.reference_field(),
                         golongan_id: golkat.id,

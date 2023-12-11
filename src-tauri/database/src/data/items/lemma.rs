@@ -21,6 +21,7 @@ impl ReferenceItem for LemmaItem {
         }
     }
 }
+
 #[async_trait::async_trait]
 impl ToTable<sqlx::Sqlite> for LemmaItem {
     type OUTPUT = Lemma;

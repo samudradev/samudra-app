@@ -22,7 +22,7 @@
                     id: new_golongan_kata,
                     keterangan: "",
                 },
-            })
+            }),
         );
         data = data;
         new_keterangan = "";
