@@ -41,14 +41,13 @@
         <h1 class="text-5xl font-bold pb-10">Samudra</h1>
         <SearchBar />
         <button on:click={reload}>Refresh</button>
-        <!-- TODO Refresh button -->
       </div>
     </div>
   </hero>
-  {#if data.length == 0}
-    <DataCardNew />
-  {/if}
   <div class="justify-center grid">
+    {#if data.length == 0}
+      <DataCardNew />
+    {/if}
     {#each data as d}
       <DataCard data={d} />
     {/each}
