@@ -41,7 +41,6 @@ impl ToTableWithReference<sqlx::Sqlite> for KonsepItem {
     ) -> Result<Konsep> {
         let konsep = match self.id {
             DbProvided::Known(v) => {
-                todo!("So apparently this part throws `RowNotFound` error. Investigate.");
                 let q = Konsep::select().where_bind("id = ?", v);
                 q.fetch_one(pool).await?
             }
