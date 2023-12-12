@@ -20,7 +20,12 @@ impl Connection {
     pub async fn from(url: String) -> Self {
         match sqlx::SqlitePool::connect(&url).await {
             Ok(pool) => Self { pool },
-            Err(_) => dbg!(Self::create_and_migrate(url).await).unwrap(),
+            Err(_) => dbg!(Self::create_and_migrate(url)
+                .await
+                .unwrap()
+                .populate_with_presets()
+                .await
+                .unwrap()),
         }
     }
 
@@ -29,5 +34,12 @@ impl Connection {
         let pool = sqlx::SqlitePool::connect(&url).await?;
         sqlx::migrate!().run(&pool).await?;
         Ok(Self { pool })
+    }
+
+    pub async fn populate_with_presets(self) -> Result<Self> {
+        sqlx::query_file!("presets/golongan_kata_ms-my.sql")
+            .execute(&self.pool)
+            .await?;
+        Ok(self)
     }
 }
