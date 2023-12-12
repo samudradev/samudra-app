@@ -16,6 +16,7 @@ use tauri::State;
 
 use database;
 use database::data::{Item, LemmaItem};
+use database::operations::DiffSumbittable;
 use database::query::{QueryParams, QueryView};
 
 // TODO Create GUI for insert new lemma.
@@ -96,12 +97,13 @@ async fn get(config: State<'_, AppConfig>, lemma: &str) -> Result<Vec<LemmaItem>
 #[tauri::command(async)]
 async fn submit_changes(
     config: State<'_, AppConfig>,
-    _old: LemmaItem,
-    _new: LemmaItem,
+    old: LemmaItem,
+    new: LemmaItem,
 ) -> Result<(), String> {
-    let _db = config.connection().await;
-    // database::operations::handle_changes(&old, &new, &db).await
-    todo!()
+    let db = config.connection().await;
+    dbg!(old.submit_changes(&new, &db).await.unwrap());
+    Ok(())
+    // todo!()
 }
 
 /// The entrypoint of this tauri app

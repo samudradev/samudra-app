@@ -5,7 +5,7 @@ use crate::data::{LemmaItem, LemmaItemDiff};
 use crate::insertions::ToTableWithReference;
 
 #[async_trait]
-trait DiffSumbittable<DB: sqlx::Database>: diff::Diff {
+pub trait DiffSumbittable<DB: sqlx::Database>: diff::Diff {
     async fn submit_changes(self, new: &Self, pool: &sqlx::Pool<DB>) -> sqlx::Result<()>;
 }
 
@@ -26,6 +26,7 @@ impl DiffSumbittable<sqlx::Sqlite> for LemmaItem {
                         .expect("Row not found");
                 }
             }
+            _ => todo!("{:#?}", diff),
         }
         Ok(())
     }
