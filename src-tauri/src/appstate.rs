@@ -62,7 +62,6 @@ impl From<&AppPaths> for AppConfig {
                 match toml::from_str(&contents) {
                     Ok(c) => c,
                     Err(E) => {
-                        println!("An error occured while reading `./databases.toml`. Please check `./databases.bak.toml`.\n{}", E);
                         std::fs::copy(
                             value.databases_toml(),
                             PathBuf::from_iter(vec![
@@ -71,6 +70,7 @@ impl From<&AppPaths> for AppConfig {
                             ]),
                         )
                         .expect("Error occured while copying backup configuration.");
+                        println!("An error occured while reading `./databases.toml`. Please check `./databases.bak.toml`.\n{}", E);
                         Self::fallback(&value)
                     }
                 }
