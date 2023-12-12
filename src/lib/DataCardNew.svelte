@@ -5,131 +5,142 @@
     import { invoke } from "@tauri-apps/api";
     import type { KataAsingItem } from "../bindings/KataAsingItem";
 
-    let data: LemmaItem = {};
-    $: konseps = [];
-    let new_keterangan: string;
-    let new_golongan_kata: string;
+    $: data = {
+        id: null,
+        lemma: "",
+        konseps: [],
+    } as LemmaItem;
+    let keterangan_item: string;
+    let golongan_kata_item: string;
     $: new_cakupans = [];
-    let new_cakupan: string;
+    let cakupan_item: string;
     $: new_kata_asings = [];
-    let new_kata_asing: KataAsingItem = { nama: "", bahasa: "" };
+    let kata_asing_item: KataAsingItem = { nama: "", bahasa: "" };
 
     function append_new_konsep() {
-        konseps.push(
+        data.konseps.push(
             Object.assign({} as KonsepItem, {
                 id: null,
-                keterangan: new_keterangan,
-                golongan_kata: new_golongan_kata,
+                keterangan: keterangan_item,
+                golongan_kata: golongan_kata_item,
                 cakupans: new_cakupans,
                 kata_asing: new_kata_asings,
             }),
         );
-        konseps = konseps; // To force reload
+        data = data; // To force reload
         new_cakupans = [];
         new_kata_asings = [];
-        new_keterangan = "";
+        keterangan_item = "";
     }
     function append_new_cakupan() {
-        new_cakupans.push(new_cakupan);
+        new_cakupans.push(cakupan_item);
         new_cakupans = new_cakupans; // To force reload
-        new_cakupan = "";
+        cakupan_item = "";
     }
     function append_new_kata_asing() {
-        new_kata_asings.push(new_kata_asing);
+        new_kata_asings.push(kata_asing_item);
         new_kata_asings = new_kata_asings; // To force reload
-        new_kata_asing = { nama: "", bahasa: "" };
-    }
-
-    function append_to_field(item: KonsepItem, field: string, value: string) {
-        item[field].push(value);
-        konseps = konseps;
+        kata_asing_item = { nama: "", bahasa: "" };
     }
 
     async function insert_lemma() {
-        data.konseps = konseps;
-
-        data.id = null;
-        console.table(data);
+        append_new_konsep();
         let a = await invoke("insert_lemma", { item: data });
-        console.log(a);
-        console.log("Here!");
+        data = {
+            id: null,
+            lemma: "",
+            konseps: [],
+        } as LemmaItem;
     }
 </script>
 
-<div class="card card-normal m-4 w-96 bg-blue-100 shadow-xl">
+<div class="card card-normal m-2 w-[40em] bg-blue-100 shadow-xl">
     <div class="card-body">
-        <div class="grid w-full grid-flow-row-dense grid-cols-4 grid-rows-1">
+        <div class="join">
             <input
                 type="text"
                 bind:value={data.lemma}
-                class="input input-bordered w-full max-w-xs card-title col-span-3"
+                class="input input-bordered w-full join-item"
             />
-            <button
-                class="btn btn-ghost btn-xs col-span-1"
-                on:click={insert_lemma}
-            >
+            <button class="btn-primary join-item" on:click={insert_lemma}>
                 Save
             </button>
         </div>
-        <div class="text-left">
-            <form on:submit|preventDefault={append_new_konsep}>
-                [+] {" "}
-                <select class="select" bind:value={new_golongan_kata}>
-                    <option value="NAMA">NAMA</option>
-                </select>
-                <button type="submit">+</button>
-                <textarea class="textarea" bind:value={new_keterangan} />
-            </form>
-            <form on:submit|preventDefault={append_new_cakupan}>
-                <div class="label">
-                    <span class="label-text-alt">Cakupan</span>
-                </div>
-                <span class="join">
-                    <input
-                        type="text"
-                        placeholder="cakupan"
-                        class="textarea join-item"
-                        bind:value={new_cakupan}
-                    />
-                    <button type="submit" class="join-item">+</button>
-                </span>
-                {#each new_cakupans as cakupan}
-                    <div>{cakupan}</div>
-                {/each}
-            </form>
-            <form
-                on:submit|preventDefault={append_new_kata_asing}
-                class="form-control"
+        <div class="indicator w-full mt-4">
+            <div
+                class="text-left card-bordered p-2 border-primary border-2 rounded-lg w-full"
             >
-                <div class="label">
-                    <span class="label-text-alt">Kata asing</span>
-                </div>
-                <span class="join">
-                    <input
-                        type="text"
-                        placeholder="kata"
-                        class="textarea join-item"
-                        bind:value={new_kata_asing.nama}
+                <form
+                    on:submit|preventDefault={append_new_konsep}
+                    class="space-y-4"
+                >
+                    <select class="select" bind:value={golongan_kata_item}>
+                        <option value="NAMA">NAMA</option>
+                    </select>
+                    <button
+                        type="submit"
+                        class="text-right indicator-item btn-primary">+</button
+                    >
+                    <textarea
+                        class="textarea w-full"
+                        placeholder="konsep"
+                        bind:value={keterangan_item}
                     />
-                    <input
-                        type="text"
-                        placeholder="bahasa"
-                        class="textarea join-item"
-                        bind:value={new_kata_asing.bahasa}
-                    />
-                    <button type="submit" class="join-item">+</button>
-                </span>
-                {#each new_kata_asings as kata_asing}
-                    <div>{kata_asing.nama}: {kata_asing.bahasa}</div>
-                {/each}
-            </form>
+                </form>
+                <form
+                    on:submit|preventDefault={append_new_cakupan}
+                    class="w-full"
+                >
+                    <div class="label">
+                        <span class="label-text-alt">Cakupan</span>
+                    </div>
+                    <span class="join w-full">
+                        <input
+                            type="text"
+                            placeholder="cakupan"
+                            class="textarea join-item w-full"
+                            bind:value={cakupan_item}
+                        />
+                        <button type="submit" class="join-item">+</button>
+                    </span>
+                    {#each new_cakupans as cakupan}
+                        <div>{cakupan}</div>
+                    {/each}
+                </form>
+                <form
+                    on:submit|preventDefault={append_new_kata_asing}
+                    class="form-control w-full"
+                >
+                    <div class="label">
+                        <span class="label-text-alt">Kata asing</span>
+                    </div>
+                    <span class="join w-full">
+                        <input
+                            type="text"
+                            placeholder="kata"
+                            class="textarea join-item w-1/2"
+                            bind:value={kata_asing_item.nama}
+                        />
+                        <input
+                            type="text"
+                            placeholder="bahasa"
+                            class="textarea join-item w-1/2"
+                            bind:value={kata_asing_item.bahasa}
+                        />
+                        <button type="submit" class="join-item">+</button>
+                    </span>
+                    {#each new_kata_asings as kata_asing}
+                        <div>{kata_asing.nama}: {kata_asing.bahasa}</div>
+                    {/each}
+                </form>
+            </div>
         </div>
-        {#each konseps as konsep, i}
+        {#each data.konseps as konsep, i}
             <div class="text-left">
                 {i + 1}.
                 <span class="badge">{konsep.golongan_kata}</span>
                 <div>
-                    <textarea class="textarea" bind:value={konsep.keterangan} />
+                    {konsep.keterangan}
                     {#if konsep.cakupans != null}
                         <div class="column">
                             {#each konsep.cakupans as cakupan}
