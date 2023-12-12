@@ -10,8 +10,11 @@
   import DataCard from "./lib/Datacard.svelte";
   import DataCardNew from "./lib/DataCardNew.svelte";
 
-  let data: LemmaItem[] = [];
+  $: data = [];
 
+  const reload = () => {
+    data = [];
+  };
   LemmaStore.subscribe((value) => {
     data = value;
   });
@@ -37,6 +40,7 @@
       <div class="max-w-md">
         <h1 class="text-5xl font-bold pb-10">Samudra</h1>
         <SearchBar />
+        <button on:click={reload}>Refresh</button>
         <!-- TODO Refresh button -->
       </div>
     </div>
