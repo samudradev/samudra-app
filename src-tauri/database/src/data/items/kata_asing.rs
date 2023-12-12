@@ -48,13 +48,14 @@ impl ToTableWithReference<sqlx::Sqlite> for KataAsingItem {
         pool: &sqlx::Pool<sqlx::Sqlite>,
     ) -> Result<KataAsing> {
         let kata_asing = <Self as ToTable<sqlx::Sqlite>>::insert_safe(self, pool).await?;
-        let _ = KataAsingXKonsep {
-            konsep_id: reference.reference_field(),
-            kata_asing_id: kata_asing.id,
+        let refer = reference.reference_field();
+        sqlx::query! {"INSERT or IGNORE INTO kata_asing_x_konsep (kata_asing_id, konsep_id) VALUES (?, ?)",
+            kata_asing.id,
+            refer
         }
-        .insert_safe(pool)
+        .execute(pool)
         .await
-        .map_err(BackendError::from);
+        .expect("Error inserting cakupan_x_konsep");
         Ok(kata_asing)
     }
 }
