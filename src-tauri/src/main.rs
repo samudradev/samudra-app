@@ -9,6 +9,7 @@ mod event;
 mod menu;
 
 use appstate::AppConfig;
+use appstate::AppPaths;
 use database::insertions::ToTable;
 use tauri::api::dialog::MessageDialogBuilder;
 use tauri::api::dialog::MessageDialogKind;
@@ -19,12 +20,20 @@ use database::data::{Item, LemmaItem};
 use database::operations::DiffSumbittable;
 use database::query::{QueryParams, QueryView};
 
-// TODO Create presets for Golongan Kata
-
 /// Exposes the active database URL to the frontend.
 #[tauri::command(async)]
 async fn active_database_url(config: State<'_, AppConfig>) -> Result<String, String> {
     Ok(config.get_active_database_url())
+}
+
+#[tauri::command(async)]
+async fn register_database_and_set_active(
+    paths: State<'_, AppPaths>,
+    config: State<'_, AppConfig>,
+    name: String,
+) -> Result<String, String> {
+    config.register_database(name.clone(), &paths).unwrap();
+    Ok(config.set_active(name).unwrap().get_active_database_url())
 }
 
 // TODO Show database statistic
@@ -102,7 +111,6 @@ async fn submit_changes(
     let db = config.connection().await;
     dbg!(old.submit_changes(&new, &db).await.unwrap());
     Ok(())
-    // todo!()
 }
 
 /// The entrypoint of this tauri app
@@ -121,7 +129,8 @@ async fn main() {
             // count_lemma,
             import_from_csv,
             insert_lemma,
-            submit_changes
+            submit_changes,
+            register_database_and_set_active
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

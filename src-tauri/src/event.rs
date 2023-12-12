@@ -4,12 +4,14 @@ use tauri::{Manager, WindowMenuEvent};
 
 pub fn on_menu_event(event: WindowMenuEvent) -> () {
     match event.menu_item_id() {
-        "register_database" => handle_database_registration(event),
-        _ => println!("{} not handled", event.menu_item_id()),
+        // "register_database" => handle_database_registration(event),
+        eventname => {
+            event.window().emit(eventname, None::<String>).unwrap();
+        }
     }
 }
 
-// TODO CUrrently just handle in storage. Not arbitrary paths.
+#[deprecated]
 fn handle_database_registration(event: WindowMenuEvent) -> () {
     let manager = event.window().app_handle();
 

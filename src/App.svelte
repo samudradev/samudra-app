@@ -2,7 +2,9 @@
   import Footer from "./lib/Footer.svelte";
   import SearchBar from "./lib/SearchBar.svelte";
   import { open } from "@tauri-apps/api/dialog";
-  import { invoke } from "@tauri-apps/api";
+  import { dialog, invoke } from "@tauri-apps/api";
+  import { listen } from "@tauri-apps/api/event";
+  import { onMount } from "svelte";
 
   import LemmaStore from "./Data.js";
   import type { LemmaItem } from "./bindings/LemmaItem";
@@ -11,6 +13,8 @@
   import DataCardNew from "./lib/DataCardNew.svelte";
 
   $: data = [];
+  let database_name = "";
+  let modal;
 
   const reload = () => {
     data = [];
@@ -19,6 +23,19 @@
     data = value;
   });
 
+  listen("register_database", (a) => {
+    modal.showModal();
+  });
+
+  async function register_database() {
+    console.log(database_name);
+    if (database_name.trim().length != 0) {
+      await invoke("register_database_and_set_active", { name: database_name });
+      modal.close();
+    }
+  }
+
+  // unlisten();
   // async function import_csv() {
   //   let selected = await open({
   //     directory: false,
@@ -35,6 +52,24 @@
 </script>
 
 <main>
+  <dialog bind:this={modal} class="modal">
+    <div class="modal-box">
+      <h3 class="font-bold text-lg">Register Database</h3>
+      <p class="py-4">
+        Give the database a name (if already available, will not create new but
+        change that as active)
+      </p>
+      <form class="join">
+        <input
+          type="text"
+          class="textarea join-item"
+          bind:value={database_name}
+        />
+        <button on:click={register_database} class="join-item">Confirm</button>
+      </form>
+      <button on:click={() => modal.close()} class="btn-warning">Cancel</button>
+    </div>
+  </dialog>
   <hero class="hero min-h-200 bg-base-200 pt-10 pb-5">
     <div class="hero-content text-center">
       <div class="max-w-md">
