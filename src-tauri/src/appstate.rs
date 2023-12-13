@@ -97,8 +97,8 @@ impl AppConfig {
         config
     }
 
-    pub async fn connection(&self) -> Pool<Sqlite> {
-        Connection::from(self.get_active_database_url()).await.pool
+    pub async fn connection(&self) -> Connection {
+        Connection::from(self.get_active_database_url()).await
     }
 
     pub fn get_active_database_url(&self) -> String {

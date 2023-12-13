@@ -1,13 +1,10 @@
 <script lang="ts">
   import Footer from "./lib/Footer.svelte";
   import SearchBar from "./lib/SearchBar.svelte";
-  import { open } from "@tauri-apps/api/dialog";
-  import { dialog, invoke } from "@tauri-apps/api";
+  import { invoke } from "@tauri-apps/api";
   import { listen } from "@tauri-apps/api/event";
-  import { onMount } from "svelte";
 
   import LemmaStore from "./Data.js";
-  import type { LemmaItem } from "./bindings/LemmaItem";
 
   import DataCard from "./lib/Datacard.svelte";
   import DataCardNew from "./lib/DataCardNew.svelte";
@@ -88,5 +85,6 @@
     {/each}
   </div>
   <!--  <button on:click={import_csv}>Import from CSV</button>-->
+
   <Footer />
 </main>

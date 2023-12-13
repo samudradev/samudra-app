@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::migrate::MigrateDatabase;
 
 use crate::errors::Result;
+use crate::prelude::BackendError;
 
 pub use sqlx::Pool;
 pub use sqlx::Sqlite;
@@ -9,6 +10,16 @@ pub use sqlx::Sqlite;
 #[derive(Debug, Clone)]
 pub struct Connection {
     pub pool: Pool<Sqlite>,
+}
+
+#[derive(Debug, Clone, serde::Serialize, PartialEq, ts_rs::TS)]
+#[ts(export, export_to = "../../src/bindings/")]
+pub struct Counts {
+    lemmas: i32,
+    konseps: i32,
+    golongan_katas: i32,
+    cakupans: i32,
+    kata_asings: i32,
 }
 
 impl Connection {
@@ -27,6 +38,13 @@ impl Connection {
                 .await
                 .unwrap()),
         }
+    }
+
+    pub async fn statistics(self) -> Result<Counts> {
+        sqlx::query_file_as!(Counts, "transactions/count_items.sql")
+            .fetch_one(&self.pool)
+            .await
+            .map_err(BackendError::from)
     }
 
     pub async fn create_and_migrate(url: String) -> Result<Self> {

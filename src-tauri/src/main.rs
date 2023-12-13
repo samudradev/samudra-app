@@ -11,6 +11,7 @@ mod menu;
 use appstate::AppConfig;
 use appstate::AppPaths;
 use database::insertions::ToTable;
+use database::states::Counts;
 use tauri::api::dialog::MessageDialogBuilder;
 use tauri::api::dialog::MessageDialogKind;
 use tauri::State;
@@ -36,17 +37,15 @@ async fn register_database_and_set_active(
     Ok(config.set_active(name).unwrap().get_active_database_url())
 }
 
-// TODO Show database statistic
-// #[tauri::command(async)]
-// async fn count_lemma(config: State<'_, AppConfig>) -> Result<(), String> {
-//     dbg!(config.get_active_database().count_lemma().await.unwrap());
-//     Ok(())
-// }
+#[tauri::command(async)]
+async fn count_items(config: State<'_, AppConfig>) -> Result<Counts, String> {
+    Ok(config.connection().await.statistics().await.unwrap())
+}
 
 /// Insert single value
 #[tauri::command(async)]
 async fn insert_lemma(config: State<'_, AppConfig>, item: LemmaItem) -> Result<(), String> {
-    let conn = config.connection().await;
+    let conn = config.connection().await.pool;
     item.insert_safe(&conn).await.unwrap();
     Ok(())
 }
@@ -93,7 +92,7 @@ async fn import_from_csv(_config: State<'_, AppConfig>, _path: String) -> Result
 /// Get a vector of [`LemmaItem`] that matches the argument.
 #[tauri::command(async)]
 async fn get(config: State<'_, AppConfig>, lemma: &str) -> Result<Vec<LemmaItem>, String> {
-    let conn = config.connection().await;
+    let conn = config.connection().await.pool;
     let views = QueryView::new()
         .with(QueryParams::either(lemma.into(), "".into()), &conn)
         .await
@@ -108,7 +107,7 @@ async fn submit_changes(
     old: LemmaItem,
     new: LemmaItem,
 ) -> Result<(), String> {
-    let db = config.connection().await;
+    let db = config.connection().await.pool;
     dbg!(old.submit_changes(&new, &db).await.unwrap());
     Ok(())
 }
@@ -126,7 +125,7 @@ async fn main() {
         .invoke_handler(tauri::generate_handler![
             get,
             active_database_url,
-            // count_lemma,
+            count_items,
             import_from_csv,
             insert_lemma,
             submit_changes,
