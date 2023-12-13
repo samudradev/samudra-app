@@ -1,5 +1,6 @@
 <script lang="ts">
     import type { LemmaItem } from "../bindings/LemmaItem";
+    import DisplayKonseps from "../components/DisplayKonseps.svelte";
 
     export let data: LemmaItem;
 
@@ -17,30 +18,6 @@
                 Edit
             </button>
         </div>
-        {#if data.konseps != null}
-            {#each data.konseps as konsep, i}
-                <div class="text-left">
-                    {i + 1}.
-                    <span class="badge">{konsep.golongan_kata}</span>
-                    {konsep.keterangan}
-                    {#if konsep.cakupans != null}
-                        <div class="column">
-                            {#each konsep.cakupans as cakupan}
-                                <div class="badge">{cakupan}</div>
-                            {/each}
-                        </div>
-                    {/if}
-                    {#if konsep.kata_asing != null}
-                        <div class="column">
-                            {#each konsep.kata_asing as kata_asing}
-                                <div class="badge">
-                                    {kata_asing.nama} ({kata_asing.bahasa})
-                                </div>
-                            {/each}
-                        </div>
-                    {/if}
-                </div>
-            {/each}
-        {/if}
+        <DisplayKonseps konseps={data.konseps} />
     </div>
 </div>

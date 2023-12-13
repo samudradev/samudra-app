@@ -5,17 +5,16 @@
 
     import type { LemmaItem } from "../bindings/LemmaItem";
     import type { KonsepItem } from "../bindings/KonsepItem";
-    import type { KataAsingItem } from "../bindings/KataAsingItem";
     import SelectGolonganKata from "../components/SelectGolonganKata.svelte";
+    import FormAppendCakupan from "../components/FormAppendCakupan.svelte";
+    import FormAppendKataAsing from "../components/FormAppendKataAsing.svelte";
 
     export let data: LemmaItem;
     let old_data: LemmaItem;
     let new_keterangan: string;
     let new_golongan_kata: string;
     $: new_cakupans = [];
-    let cakupan_item: string;
     $: new_kata_asings = [];
-    let kata_asing_item: KataAsingItem = { nama: "", bahasa: "" };
 
     onMount(() => {
         old_data = _.cloneDeep(data);
@@ -35,16 +34,6 @@
         new_cakupans = [];
         new_kata_asings = [];
         new_keterangan = "";
-    }
-    function append_new_cakupan() {
-        new_cakupans.push(cakupan_item);
-        new_cakupans = new_cakupans; // To force reload
-        cakupan_item = "";
-    }
-    function append_new_kata_asing() {
-        new_kata_asings.push(kata_asing_item);
-        new_kata_asings = new_kata_asings; // To force reload
-        kata_asing_item = { nama: "", bahasa: "" };
     }
 
     async function submit_changes() {
@@ -129,52 +118,8 @@
                         bind:value={new_keterangan}
                     />
                 </form>
-                <form
-                    on:submit|preventDefault={append_new_cakupan}
-                    class="w-full"
-                >
-                    <div class="label">
-                        <span class="label-text-alt">Cakupan</span>
-                    </div>
-                    <span class="join w-full">
-                        <input
-                            type="text"
-                            placeholder="cakupan"
-                            class="textarea join-item w-full"
-                            bind:value={cakupan_item}
-                        />
-                        <button type="submit" class="join-item">+</button>
-                    </span>
-                    {#each new_cakupans as cakupan}
-                        <div>{cakupan}</div>
-                    {/each}
-                </form>
-                <form
-                    on:submit|preventDefault={append_new_kata_asing}
-                    class="form-control w-full"
-                >
-                    <div class="label">
-                        <span class="label-text-alt">Kata asing</span>
-                    </div>
-                    <span class="join w-full">
-                        <input
-                            type="text"
-                            placeholder="kata"
-                            class="textarea join-item w-1/2"
-                            bind:value={kata_asing_item.nama}
-                        />
-                        <input
-                            type="text"
-                            placeholder="bahasa"
-                            class="textarea join-item w-1/2"
-                            bind:value={kata_asing_item.bahasa}
-                        />
-                        <button type="submit" class="join-item">+</button>
-                    </span>
-                    {#each new_kata_asings as kata_asing}
-                        <div>{kata_asing.nama}: {kata_asing.bahasa}</div>
-                    {/each}
-                </form>
+                <FormAppendCakupan bind:cakupans={new_cakupans} />
+                <FormAppendKataAsing bind:kata_asings={new_kata_asings} />
             </div>
         </div>
     </div>

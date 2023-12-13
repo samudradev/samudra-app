@@ -11,7 +11,7 @@
     });
 </script>
 
-<select class="select" bind:value={golongan_kata}>
+<select class="select" bind:value={golongan_kata} required>
     <option value="" disabled selected>Golongan kata</option>
     {#each golongan_kata_list as golongan_kata}
         <option value={golongan_kata}>{golongan_kata}</option>
