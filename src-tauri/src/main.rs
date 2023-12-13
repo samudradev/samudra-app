@@ -36,9 +36,10 @@ async fn register_database_and_set_active(
     paths: State<'_, AppPaths>,
     config: State<'_, AppConfig>,
     name: String,
-) -> Result<String, String> {
-    config.register_database(name.clone(), &paths).unwrap();
-    Ok(config.set_active(name).unwrap().get_active_database_url())
+) -> Result<String, tauri::Error> {
+    Ok(config
+        .register_database_and_set_active(name.clone(), &paths)?
+        .get_active_database_url())
 }
 
 #[tauri::command(async)]

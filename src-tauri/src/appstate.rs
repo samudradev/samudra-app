@@ -80,7 +80,6 @@ impl From<&AppPaths> for AppConfig {
     }
 }
 
-// TODO update toml file after update
 impl AppConfig {
     fn null() -> Self {
         Self {
@@ -91,11 +90,22 @@ impl AppConfig {
 
     /// Sets the default value with the provided path.
     pub fn fallback(paths: &AppPaths) -> AppConfig {
-        let config = Self::null();
-        let _ = config.register_database("default".into(), paths);
-        let _ = config.set_active("default".into());
-        let _ = config.to_toml(&paths.databases_toml());
-        config
+        let conf = Self::null();
+        let _ = &conf
+            .register_database_and_set_active("default".into(), paths)
+            .unwrap();
+        conf
+    }
+
+    pub fn register_database_and_set_active(
+        &self,
+        name: String,
+        paths: &AppPaths,
+    ) -> Result<&Self, tauri::Error> {
+        Ok(self
+            .register_database(name.clone(), paths)
+            .set_active(name)
+            .to_toml(&paths.databases_toml())?)
     }
 
     pub async fn connection(&self) -> Connection {
@@ -108,26 +118,27 @@ impl AppConfig {
         hashmap.get(&name.clone()).unwrap().path.clone()
     }
 
-    pub fn to_toml(&self, file: &Path) -> Result<(), std::io::Error> {
+    pub fn to_toml(&self, file: &Path) -> Result<&Self, std::io::Error> {
         let mut file_buf = fs::OpenOptions::new().write(true).create(true).open(file)?;
-        file_buf.write_all(toml::to_string_pretty(self).unwrap().as_bytes())
+        file_buf.write_all(toml::to_string_pretty(self).unwrap().as_bytes())?;
+        Ok(self)
     }
 
-    pub fn register_database(&self, name: String, paths: &AppPaths) -> Result<(), tauri::Error> {
+    pub fn register_database(&self, name: String, paths: &AppPaths) -> &Self {
         self.databases.lock().unwrap().insert(
             name.clone(),
             DatabaseConfig::in_storage(name.clone(), paths),
         );
-        Ok(())
+        self
     }
 
-    pub fn set_active(&self, name: String) -> Result<&Self, String> {
+    pub fn set_active(&self, name: String) -> &Self {
         match self.databases.lock().unwrap().get(&name) {
             Some(_database) => {
                 *self.active.lock().unwrap() = name.into();
-                Ok(self)
+                self
             }
-            None => Err(format!("Error while accessing the active name `{}`.", name)),
+            None => panic!("Error while accessing the active name `{}`.", name),
         }
     }
 }
