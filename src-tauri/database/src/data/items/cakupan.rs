@@ -22,10 +22,11 @@ impl Item for CakupanItem {
     }
 
     fn from_views(value: &Vec<Self::VIEW>) -> Vec<Self> {
-        value
+        dbg!(value)
             .clone()
             .into_iter()
-            .into_group_map_by(|a| a.cakupan.clone().unwrap_or_default())
+            .filter(|a| a.cakupan.is_some())
+            .into_group_map_by(|a| a.cakupan.clone().expect("None have been filtered out"))
             .keys()
             .map(|a| Self::from(a.to_owned()))
             .collect_vec()

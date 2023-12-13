@@ -27,10 +27,15 @@ impl Item for KataAsingItem {
         value
             .clone()
             .into_iter()
+            .filter(|a| a.kata_asing.is_some())
             .into_group_map_by(|a| {
                 (
-                    a.kata_asing.clone().unwrap_or_default(),
-                    a.bahasa_asing.clone().unwrap_or_default(),
+                    a.kata_asing
+                        .clone()
+                        .expect("None should have been filtered out"),
+                    a.bahasa_asing
+                        .clone()
+                        .expect("None should have been filtered out"),
                 )
             })
             .keys()

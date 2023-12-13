@@ -23,6 +23,7 @@ use database::query::{QueryParams, QueryView};
 
 // TODO FEAT Delete data
 // TODO FEAT Share picture
+// TODO DOCS README
 
 /// Exposes the active database URL to the frontend.
 #[tauri::command(async)]
