@@ -4,6 +4,7 @@
 // It needs to be defined inside this macro_rules.
 // Refer https://github.com/Aleph-Alpha/ts-rs/issues/83
 // (I have tried the suggestion to use qualified full path `std::option::Option` resulting in the same error.)
+#[deprecated]
 macro_rules! export {
     {
         $dataclass:ident from $datamodel:ident with {
