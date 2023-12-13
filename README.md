@@ -5,7 +5,7 @@ Dengan memudahkan proses ini, kita dapat menambah jumlah rujukan bahasa Melayu d
 
 ## Demo
 
-![](./docs/samudra_demo.mp4)
+https://github.com/samudradev/samudra-app/assets/61819672/88a7ea18-03fe-45e9-abf3-25a31ec3d53e
 
 ## Reka Data
 
