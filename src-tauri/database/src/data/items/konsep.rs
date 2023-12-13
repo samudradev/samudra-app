@@ -6,7 +6,7 @@ use crate::data::items::lemma::LemmaItem;
 use crate::models::golongan_kata::GolonganKata;
 use crate::models::konsep::{InsertKonsep, Konsep};
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, diff::Diff, ts_rs::TS)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, diff::Diff, ts_rs::TS)]
 #[ts(export, export_to = "../../src/bindings/")]
 #[diff(attr(
     #[derive(Debug)]
@@ -18,6 +18,29 @@ pub struct KonsepItem {
     #[ts(type = "Array<string>")]
     pub cakupans: Vec<CakupanItem>,
     pub kata_asing: Vec<KataAsingItem>,
+}
+
+impl PartialEq for KonsepItem {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+            && self.keterangan == other.keterangan
+            && self.golongan_kata == other.golongan_kata
+            // Necessary to ignore vector order
+            && other
+                .cakupans
+                .iter()
+                .filter(|&a| !self.cakupans.contains(a))
+                .collect_vec()
+                .len()
+                == 0
+            && other
+                .kata_asing
+                .iter()
+                .filter(|&a| !self.kata_asing.contains(a))
+                .collect_vec()
+                .len()
+                == 0
+    }
 }
 impl ReferenceItem for KonsepItem {
     type FIELD = i32;
