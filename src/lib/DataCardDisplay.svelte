@@ -4,7 +4,7 @@
 
     export let data: LemmaItem;
 
-    export let toggle_edit: CallableFunction;
+    export let toggle_edit;
 </script>
 
 <div class="card card-normal m-4 w-96 bg-base-100 shadow-xl">
