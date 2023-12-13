@@ -1,3 +1,4 @@
+use crate::data::Item;
 use crate::prelude::*;
 
 use crate::models::kata_asing::{InsertKataAsing, KataAsing};
@@ -11,6 +12,34 @@ use crate::models::kata_asing_x_konsep::KataAsingXKonsep;
 pub struct KataAsingItem {
     pub nama: String,
     pub bahasa: String,
+}
+
+impl Item for KataAsingItem {
+    type MAP = (); //PLACEHOLDER
+
+    type VIEW = LemmaWithKonsepView;
+
+    fn from_hashmap(value: &Self::MAP) -> Vec<Self> {
+        todo!()
+    }
+
+    fn from_views(value: &Vec<Self::VIEW>) -> Vec<Self> {
+        value
+            .clone()
+            .into_iter()
+            .into_group_map_by(|a| {
+                (
+                    a.kata_asing.clone().unwrap_or_default(),
+                    a.bahasa_asing.clone().unwrap_or_default(),
+                )
+            })
+            .keys()
+            .map(|(nama, bahasa)| KataAsingItem {
+                nama: nama.into(),
+                bahasa: bahasa.into(),
+            })
+            .collect_vec()
+    }
 }
 
 #[async_trait::async_trait]

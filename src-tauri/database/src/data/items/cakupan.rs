@@ -1,13 +1,36 @@
+use std::collections::HashMap;
+
+use crate::data::Item;
 use crate::prelude::*;
 
 use crate::models::cakupan::{Cakupan, InsertCakupan};
 use crate::models::cakupan_x_konsep::CakupanXKonsep;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, diff::Diff)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, diff::Diff, Hash, Eq)]
 #[diff(attr(
     #[derive(Debug)]
 ))]
 pub struct CakupanItem(String);
+
+impl Item for CakupanItem {
+    type MAP = (); //PLACEHOLDER;
+
+    type VIEW = LemmaWithKonsepView;
+
+    fn from_hashmap(value: &Self::MAP) -> Vec<Self> {
+        todo!()
+    }
+
+    fn from_views(value: &Vec<Self::VIEW>) -> Vec<Self> {
+        value
+            .clone()
+            .into_iter()
+            .into_group_map_by(|a| a.cakupan.clone().unwrap_or_default())
+            .keys()
+            .map(|a| Self::from(a.to_owned()))
+            .collect_vec()
+    }
+}
 
 impl From<&str> for CakupanItem {
     fn from(value: &str) -> Self {

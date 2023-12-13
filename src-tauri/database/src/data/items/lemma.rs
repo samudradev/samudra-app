@@ -1,4 +1,4 @@
-use crate::prelude::*;
+use crate::{data::CakupanItem, prelude::*};
 
 use std::collections::HashMap;
 
@@ -79,20 +79,8 @@ impl Item for KonsepItem {
                 id: DbProvided::Known(konsep.0.clone()),
                 keterangan: konsep.1.clone(),
                 golongan_kata: konsep.2.clone(),
-                cakupans: views.clone().into_iter().fold(vec![], |mut a, b| {
-                    if let Some(c) = b.cakupan.clone() {
-                        a.push(c.into());
-                    }
-                    a
-                }),
-                kata_asing: views.clone().into_iter().fold(vec![], |mut a, b| {
-                    if let (Some(nama), Some(bahasa)) =
-                        (b.kata_asing.clone(), b.bahasa_asing.clone())
-                    {
-                        a.push(KataAsingItem { nama, bahasa });
-                    }
-                    a
-                }),
+                cakupans: CakupanItem::from_views(views),
+                kata_asing: KataAsingItem::from_views(views),
             })
         }
         data

@@ -35,17 +35,11 @@ mod test {
                     id: DbProvided::Known(1),
                     keterangan: "gas-gas dan debu yang mengelilingi lohong hitam".into(),
                     golongan_kata: "NAMA".into(),
-                    cakupans: vec!["Astrofizik".into(), "Teori Relativiti".into(),],
-                    kata_asing: vec![
-                        KataAsingItem {
-                            nama: "accretion disk".into(),
-                            bahasa: "english".into(),
-                        },
-                        KataAsingItem {
-                            nama: "accretion disk".into(),
-                            bahasa: "english".into(),
-                        },
-                    ],
+                    cakupans: vec!["Teori Relativiti".into(), "Astrofizik".into(),],
+                    kata_asing: vec![KataAsingItem {
+                        nama: "accretion disk".into(),
+                        bahasa: "english".into(),
+                    }],
                 },],
             },
         );
@@ -58,17 +52,11 @@ mod test {
                     id: DbProvided::Known(2),
                     keterangan: "sempadan terluar lohong hitam".into(),
                     golongan_kata: "NAMA".into(),
-                    cakupans: vec!["Astrofizik".into(), "Teori Relativiti".into(),],
-                    kata_asing: vec![
-                        KataAsingItem {
-                            nama: "event horizon".into(),
-                            bahasa: "english".into(),
-                        },
-                        KataAsingItem {
-                            nama: "event horizon".into(),
-                            bahasa: "english".into(),
-                        },
-                    ],
+                    cakupans: vec!["Teori Relativiti".into(), "Astrofizik".into(),],
+                    kata_asing: vec![KataAsingItem {
+                        nama: "event horizon".into(),
+                        bahasa: "english".into(),
+                    }],
                 },],
             }
         );
@@ -91,16 +79,10 @@ mod test {
                     keterangan: "gas-gas dan debu yang mengelilingi lohong hitam".into(),
                     golongan_kata: "NAMA".into(),
                     cakupans: vec!["Astrofizik".into(), "Teori Relativiti".into(),],
-                    kata_asing: vec![
-                        KataAsingItem {
-                            nama: "accretion disk".into(),
-                            bahasa: "english".into(),
-                        },
-                        KataAsingItem {
-                            nama: "accretion disk".into(),
-                            bahasa: "english".into(),
-                        },
-                    ],
+                    kata_asing: vec![KataAsingItem {
+                        nama: "accretion disk".into(),
+                        bahasa: "english".into(),
+                    }],
                 },],
             }),
         );

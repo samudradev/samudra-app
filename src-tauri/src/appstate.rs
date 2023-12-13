@@ -80,6 +80,7 @@ impl From<&AppPaths> for AppConfig {
     }
 }
 
+// TODO update toml file after update
 impl AppConfig {
     fn null() -> Self {
         Self {

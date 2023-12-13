@@ -60,16 +60,10 @@ mod test {
                     keterangan: "gas-gas dan debu yang mengelilingi lohong hitam".into(),
                     golongan_kata: "NAMA".into(),
                     cakupans: vec!["Astrofizik".into(), "Teori Relativiti".into()],
-                    kata_asing: vec![
-                        KataAsingItem {
-                            nama: "accretion disk".into(),
-                            bahasa: "english".into(),
-                        },
-                        KataAsingItem {
-                            nama: "accretion disk".into(),
-                            bahasa: "english".into(),
-                        },
-                    ],
+                    kata_asing: vec![KataAsingItem {
+                        nama: "accretion disk".into(),
+                        bahasa: "english".into(),
+                    }],
                 },
                 KonsepItem {
                     id: DbProvided::Unknown,
@@ -89,7 +83,7 @@ mod test {
 
     #[sqlx::test(fixtures("defaults"))]
     fn test_insert_safe(pool: Pool<Sqlite>) -> Result<(), sqlx::Error> {
-        let new: LemmaItem = LemmaItem {
+        let mut new: LemmaItem = LemmaItem {
             id: DbProvided::Unknown,
             lemma: "cakera tokokan".into(),
             konseps: vec![KonsepItem {
@@ -97,40 +91,20 @@ mod test {
                 keterangan: "gas-gas dan debu yang mengelilingi lohong hitam".into(),
                 golongan_kata: "NAMA".into(),
                 cakupans: vec!["Astrofizik".into(), "Teori Relativiti".into()],
-                kata_asing: vec![
-                    KataAsingItem {
-                        nama: "accretion disk".into(),
-                        bahasa: "english".into(),
-                    },
-                    KataAsingItem {
-                        nama: "accretion disk".into(),
-                        bahasa: "english".into(),
-                    },
-                ],
+                kata_asing: vec![KataAsingItem {
+                    nama: "accretion disk".into(),
+                    bahasa: "english".into(),
+                }],
             }],
         };
         let _insert = dbg!(new.clone().insert_safe(&pool).await?);
         let view = dbg!(QueryView::new().all(&pool).await?);
         let data = LemmaItem::from_views(&view);
         let from_db = data.first().expect("Lemma Item?");
-        assert_eq!(&from_db.lemma, &new.lemma);
-        assert_eq!(
-            &from_db.konseps.first().expect("Konsep item?").keterangan,
-            &new.konseps.first().expect("Konsep item?").keterangan
-        );
-        assert_eq!(
-            &from_db
-                .konseps
-                .first()
-                .expect("Konsep item?")
-                .cakupans
-                .first(),
-            &new.konseps.first().expect("Konsep item?").cakupans.first()
-        );
-        assert_eq!(
-            &from_db.konseps.last().expect("Konsep item?").keterangan,
-            &new.konseps.last().expect("Konsep item?").keterangan
-        );
+        new.id = DbProvided::Known(1);
+        let k = new.konseps.first_mut().unwrap();
+        k.id = DbProvided::Known(1);
+        assert_eq!(from_db, &new);
         Ok(())
     }
 }

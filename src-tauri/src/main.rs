@@ -21,6 +21,9 @@ use database::data::{Item, LemmaItem};
 use database::operations::DiffSumbittable;
 use database::query::{QueryParams, QueryView};
 
+// TODO FEAT Delete data
+// TODO FEAT Share picture
+
 /// Exposes the active database URL to the frontend.
 #[tauri::command(async)]
 async fn active_database_url(config: State<'_, AppConfig>) -> Result<String, String> {
