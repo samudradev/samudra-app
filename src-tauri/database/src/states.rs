@@ -21,8 +21,8 @@ pub struct Counts {
     kata_asings: i32,
 }
 
-pub struct StringID {
-    pub id: String,
+pub struct StringItem {
+    pub item: String,
 }
 
 impl Connection {
@@ -43,8 +43,8 @@ impl Connection {
         }
     }
 
-    pub async fn get_golongan_kata_enumeration(self) -> Result<Vec<StringID>> {
-        sqlx::query_as!(StringID, "SELECT id FROM golongan_kata")
+    pub async fn get_golongan_kata_enumeration(self) -> Result<Vec<StringItem>> {
+        sqlx::query_as!(StringItem, "SELECT nama AS item FROM golongan_kata")
             .fetch_all(&self.pool)
             .await
             .map_err(BackendError::from)

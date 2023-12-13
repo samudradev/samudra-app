@@ -22,6 +22,7 @@ use database::operations::DiffSumbittable;
 // TODO FEAT Delete data
 // TODO FEAT Share picture
 // TODO DOCS README
+// TODO Manage errors gracefully
 
 /// Exposes the active database URL to the frontend.
 #[tauri::command(async)]
@@ -44,6 +45,8 @@ async fn register_database_and_set_active(
 async fn count_items(config: State<'_, AppConfig>) -> Result<Counts, String> {
     Ok(config.connection().await.statistics().await.unwrap())
 }
+
+/// Returns all golongan_katas from the table
 #[tauri::command(async)]
 async fn get_golongan_kata_enumeration(
     config: State<'_, AppConfig>,
@@ -54,7 +57,10 @@ async fn get_golongan_kata_enumeration(
         .get_golongan_kata_enumeration()
         .await
         .unwrap();
-    Ok(res.iter().map(|a| a.id.to_owned()).collect::<Vec<String>>())
+    Ok(res
+        .iter()
+        .map(|a| a.item.to_owned())
+        .collect::<Vec<String>>())
 }
 
 /// Insert single value
@@ -106,7 +112,7 @@ async fn import_from_csv(_config: State<'_, AppConfig>, _path: String) -> Result
 
 /// Get a vector of [`LemmaItem`] that matches the argument.
 #[tauri::command(async)]
-async fn get(config: State<'_, AppConfig>, lemma: &str) -> Result<Vec<LemmaItem>, String> {
+async fn get_lemma(config: State<'_, AppConfig>, lemma: &str) -> Result<Vec<LemmaItem>, String> {
     let conn = config.connection().await.pool;
     let views = if lemma.is_empty() {
         LemmaWithKonsepView::query_all(&conn).await.unwrap()
@@ -115,7 +121,7 @@ async fn get(config: State<'_, AppConfig>, lemma: &str) -> Result<Vec<LemmaItem>
             .await
             .unwrap()
     };
-    Ok(dbg!(LemmaItem::from_views(&views)))
+    Ok(LemmaItem::from_views(&views))
 }
 
 /// Submit lemma changes to database
@@ -141,7 +147,7 @@ async fn main() {
         .manage(paths)
         .manage(config)
         .invoke_handler(tauri::generate_handler![
-            get,
+            get_lemma,
             active_database_url,
             count_items,
             import_from_csv,
