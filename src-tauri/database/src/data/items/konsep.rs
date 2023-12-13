@@ -12,7 +12,7 @@ use crate::models::konsep::{InsertKonsep, Konsep};
     #[derive(Debug)]
 ))]
 pub struct KonsepItem {
-    pub id: DbProvided<i32>,
+    pub id: DbProvided<i64>,
     pub keterangan: String,
     pub golongan_kata: String,
     #[ts(type = "Array<string>")]
@@ -43,7 +43,7 @@ impl PartialEq for KonsepItem {
     }
 }
 impl ReferenceItem for KonsepItem {
-    type FIELD = i32;
+    type FIELD = i64;
     fn reference_field(&self) -> Self::FIELD {
         match self.id {
             DbProvided::Known(v) => v,

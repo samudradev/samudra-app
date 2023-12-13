@@ -12,6 +12,7 @@ use appstate::AppConfig;
 use appstate::AppPaths;
 use database::insertions::ToTable;
 use database::states::Counts;
+use database::views::LemmaWithKonsepView;
 use tauri::api::dialog::MessageDialogBuilder;
 use tauri::api::dialog::MessageDialogKind;
 use tauri::State;
@@ -19,7 +20,6 @@ use tauri::State;
 use database;
 use database::data::{Item, LemmaItem};
 use database::operations::DiffSumbittable;
-use database::query::{QueryParams, QueryView};
 
 // TODO FEAT Delete data
 // TODO FEAT Share picture
@@ -110,10 +110,13 @@ async fn import_from_csv(_config: State<'_, AppConfig>, _path: String) -> Result
 #[tauri::command(async)]
 async fn get(config: State<'_, AppConfig>, lemma: &str) -> Result<Vec<LemmaItem>, String> {
     let conn = config.connection().await.pool;
-    let views = QueryView::new()
-        .with(QueryParams::either(lemma.into(), "".into()), &conn)
-        .await
-        .unwrap();
+    let views = if lemma.is_empty() {
+        LemmaWithKonsepView::query_all(&conn).await.unwrap()
+    } else {
+        LemmaWithKonsepView::query_lemma(lemma.into(), &conn)
+            .await
+            .unwrap()
+    };
     Ok(dbg!(LemmaItem::from_views(&views)))
 }
 

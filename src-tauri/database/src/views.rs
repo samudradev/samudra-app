@@ -1,3 +1,5 @@
+use sqlx::Sqlite;
+
 #[derive(Debug, Clone, sqlx::FromRow, Default)]
 pub struct LemmaWithKonsepView {
     pub lemma: String,
@@ -7,8 +9,29 @@ pub struct LemmaWithKonsepView {
     pub kata_asing: Option<String>,
     pub bahasa_asing: Option<String>,
     // IDs
-    pub l_id: i32,
-    pub k_id: i32,
+    pub l_id: i64,
+    pub k_id: i64,
+}
+
+impl LemmaWithKonsepView {
+    pub async fn query_lemma(lemma: String, pool: &sqlx::Pool<Sqlite>) -> sqlx::Result<Vec<Self>> {
+        sqlx::query_file_as!(
+            Self,
+            "transactions/select_lemma_with_konsep_view.sql",
+            lemma
+        )
+        .fetch_all(pool)
+        .await
+    }
+    pub async fn query_all(pool: &sqlx::Pool<Sqlite>) -> sqlx::Result<Vec<Self>> {
+        sqlx::query_file_as!(
+            Self,
+            "transactions/select_lemma_with_konsep_view.sql",
+            None::<String>
+        )
+        .fetch_all(pool)
+        .await
+    }
 }
 
 #[cfg(test)]
@@ -16,14 +39,13 @@ mod test {
     use crate::data::Item;
     use crate::data::{KataAsingItem, KonsepItem, LemmaItem};
     use crate::prelude::ToTable;
-    use crate::query::{QueryParams, QueryView};
     use crate::types::DbProvided;
     use crate::views::LemmaWithKonsepView;
     use itertools::Itertools;
 
     #[sqlx::test(fixtures("lemma", "lemma_2"))]
     fn test_lemma_w_konsep_view(pool: sqlx::Pool<sqlx::Sqlite>) {
-        let views: Vec<LemmaWithKonsepView> = QueryView::new().all(&pool).await.unwrap();
+        let views: Vec<LemmaWithKonsepView> = LemmaWithKonsepView::query_all(&pool).await.unwrap();
         let mut data = dbg!(LemmaItem::from_views(&views)
             .into_iter()
             .sorted_by(|a, b| a.lemma.cmp(&b.lemma)));
@@ -65,8 +87,10 @@ mod test {
 
     #[sqlx::test(fixtures("lemma", "lemma_2"))]
     fn test_lemma_w_empty_konsep_query_view(pool: sqlx::Pool<sqlx::Sqlite>) {
-        let param = QueryParams::either("cakera tokokan".into(), "".into());
-        let views: Vec<LemmaWithKonsepView> = QueryView::new().with(param, &pool).await.unwrap();
+        let views: Vec<LemmaWithKonsepView> =
+            LemmaWithKonsepView::query_lemma("cakera tokokan".into(), &pool)
+                .await
+                .unwrap();
         let mut data = dbg!(LemmaItem::from_views(&views)
             .into_iter()
             .sorted_by(|a, b| a.lemma.cmp(&b.lemma)));
@@ -103,7 +127,7 @@ mod test {
             }],
         };
         let _ = item.clone().insert_safe(&pool).await.unwrap();
-        let views: Vec<LemmaWithKonsepView> = QueryView::new().all(&pool).await.unwrap();
+        let views: Vec<LemmaWithKonsepView> = LemmaWithKonsepView::query_all(&pool).await.unwrap();
         let data = LemmaItem::from_views(&views);
         item.id = DbProvided::Known(1);
         let k = item.konseps.first_mut().unwrap();
@@ -127,7 +151,7 @@ mod test {
             }],
         };
         let _ = item.clone().insert_safe(&pool).await.unwrap();
-        let views: Vec<LemmaWithKonsepView> = dbg!(QueryView::new().all(&pool).await.unwrap());
+        let views: Vec<LemmaWithKonsepView> = LemmaWithKonsepView::query_all(&pool).await.unwrap();
         let data = LemmaItem::from_views(&views);
         item.id = DbProvided::Known(1);
         let k = item.konseps.first_mut().unwrap();

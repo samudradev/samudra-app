@@ -6,31 +6,11 @@ use serde::{Deserialize, Serialize};
 #[ormlite(table = "konsep", insertable=InsertKonsep)]
 pub struct Konsep {
     #[ormlite(primary_key)]
-    pub id: i32,
+    pub id: i64,
     #[ormlite(default)]
     pub tarikh_masuk: DateTime<Utc>,
-    pub lemma_id: i32,
+    pub lemma_id: i64,
     pub golongan_id: String,
     pub keterangan: Option<String>,
-    pub tertib: Option<i32>,
-}
-
-#[derive(Copy, Clone, Debug)]
-pub enum Relation {
-    // #[sea_orm(
-    //     belongs_to = "super::golongan_kata::Entity",
-    //     from = "Column::GolonganId",
-    //     to = "super::golongan_kata::Column::Id",
-    //     on_update = "Cascade",
-    //     on_delete = "SetNull"
-    // )]
-    GolonganKata,
-    // #[sea_orm(
-    //     belongs_to = "super::lemma::Entity",
-    //     from = "Column::LemmaId",
-    //     to = "super::lemma::Column::Id",
-    //     on_update = "NoAction",
-    //     on_delete = "SetDefault"
-    // )]
-    Lemma,
+    pub tertib: Option<i64>,
 }

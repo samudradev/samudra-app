@@ -6,13 +6,8 @@ use serde::{Deserialize, Serialize};
 #[ormlite(table = "lemma", insertable = InsertLemma)]
 pub struct Lemma {
     #[ormlite(primary_key)]
-    pub id: i32,
+    pub id: i64,
     #[ormlite(default)]
     pub tarikh_masuk: DateTime<Utc>,
     pub nama: String,
-}
-
-#[derive(Copy, Clone, Debug)]
-pub enum Relation {
-    Konsep,
 }

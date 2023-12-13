@@ -37,14 +37,13 @@ mod test {
     use crate::data::items::lemma::Item;
     use crate::data::{KataAsingItem, KonsepItem, LemmaItem};
     use crate::operations::DiffSumbittable;
-    use crate::prelude::ToTable;
-    use crate::query::QueryView;
+    use crate::prelude::{LemmaWithKonsepView, ToTable};
     use crate::types::DbProvided;
     use sqlx::{Pool, Sqlite};
 
     #[sqlx::test(fixtures("lemma"))]
     fn test_diff_handling(pool: Pool<Sqlite>) -> Result<(), sqlx::Error> {
-        let view = QueryView::new().all(&pool).await?;
+        let view = LemmaWithKonsepView::query_all(&pool).await?;
         let data = LemmaItem::from_views(&view);
         let _old = data
             .first()
@@ -75,7 +74,7 @@ mod test {
             ],
         };
         _old.submit_changes(&_new, &pool).await?;
-        let view = QueryView::new().all(&pool).await?;
+        let view = LemmaWithKonsepView::query_all(&pool).await?;
         let data = LemmaItem::from_views(&view);
         assert_eq!(data.first().expect("Here?").konseps.len(), 2);
         Ok(())
@@ -97,8 +96,8 @@ mod test {
                 }],
             }],
         };
-        let _insert = dbg!(new.clone().insert_safe(&pool).await?);
-        let view = dbg!(QueryView::new().all(&pool).await?);
+        let _insert = new.clone().insert_safe(&pool).await?;
+        let view = LemmaWithKonsepView::query_all(&pool).await?;
         let data = LemmaItem::from_views(&view);
         let from_db = data.first().expect("Lemma Item?");
         new.id = DbProvided::Known(1);

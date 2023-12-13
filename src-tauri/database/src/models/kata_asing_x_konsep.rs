@@ -17,23 +17,3 @@ where
     Self: Model<DB>,
 {
 }
-
-#[derive(Copy, Clone, Debug)]
-pub enum Relation {
-    // #[sea_orm(
-    //     belongs_to = "super::kata_asing::Entity",
-    //     from = "Column::KataAsingId",
-    //     to = "super::kata_asing::Column::Id",
-    //     on_update = "Cascade",
-    //     on_delete = "Cascade"
-    // )]
-    KataAsing,
-    // #[sea_orm(
-    //     belongs_to = "super::konsep::Entity",
-    //     from = "Column::KonsepId",
-    //     to = "super::konsep::Column::Id",
-    //     on_update = "Cascade",
-    //     on_delete = "Cascade"
-    // )]
-    Konsep,
-}

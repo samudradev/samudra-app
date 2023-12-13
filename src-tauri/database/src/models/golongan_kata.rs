@@ -12,9 +12,3 @@ pub struct GolonganKata {
     pub nama: String,
     pub keterangan: String,
 }
-
-#[derive(Copy, Clone, Debug)]
-pub enum Relation {
-    // #[sea_orm(has_many = "super::konsep::Entity")]
-    Konsep,
-}

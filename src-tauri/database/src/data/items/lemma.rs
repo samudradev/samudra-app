@@ -8,12 +8,12 @@ use std::collections::HashMap;
     #[derive(Debug)]
 ))]
 pub struct LemmaItem {
-    pub id: DbProvided<i32>,
+    pub id: DbProvided<i64>,
     pub lemma: String,
     pub konseps: Vec<KonsepItem>,
 }
 impl ReferenceItem for LemmaItem {
-    type FIELD = i32;
+    type FIELD = i64;
     fn reference_field(&self) -> Self::FIELD {
         match self.id {
             DbProvided::Known(v) => v,
@@ -59,8 +59,8 @@ impl ToTable<sqlx::Sqlite> for LemmaItem {
     }
 }
 
-type KonsepHashMap = HashMap<(i32, String, String), Vec<LemmaWithKonsepView>>;
-type LemmaWithKonsepHashMap = HashMap<(i32, String), KonsepHashMap>;
+type KonsepHashMap = HashMap<(i64, String, String), Vec<LemmaWithKonsepView>>;
+type LemmaWithKonsepHashMap = HashMap<(i64, String), KonsepHashMap>;
 
 pub trait Item: Sized {
     type MAP;
@@ -123,7 +123,7 @@ impl IntoHashMap for Vec<LemmaWithKonsepView> {
             .into_iter()
             .into_group_map_by(|a| (a.l_id, a.lemma.clone()))
             .into_iter()
-            .map(|(k, v): ((i32, String), Vec<LemmaWithKonsepView>)| {
+            .map(|(k, v): ((i64, String), Vec<LemmaWithKonsepView>)| {
                 (
                     k,
                     v.into_iter().into_group_map_by(|a| {
