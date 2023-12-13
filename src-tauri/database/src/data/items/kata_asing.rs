@@ -2,7 +2,6 @@ use crate::data::Item;
 use crate::prelude::*;
 
 use crate::models::kata_asing::{InsertKataAsing, KataAsing};
-use crate::models::kata_asing_x_konsep::KataAsingXKonsep;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, diff::Diff, ts_rs::TS)]
 #[ts(export, export_to = "../../src/bindings/")]
@@ -19,7 +18,7 @@ impl Item for KataAsingItem {
 
     type VIEW = LemmaWithKonsepView;
 
-    fn from_hashmap(value: &Self::MAP) -> Vec<Self> {
+    fn from_hashmap(_value: &Self::MAP) -> Vec<Self> {
         todo!()
     }
 

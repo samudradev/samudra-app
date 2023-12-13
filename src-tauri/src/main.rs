@@ -13,8 +13,6 @@ use appstate::AppPaths;
 use database::insertions::ToTable;
 use database::states::Counts;
 use database::views::LemmaWithKonsepView;
-use tauri::api::dialog::MessageDialogBuilder;
-use tauri::api::dialog::MessageDialogKind;
 use tauri::State;
 
 use database;

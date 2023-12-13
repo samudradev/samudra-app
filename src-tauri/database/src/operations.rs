@@ -9,6 +9,7 @@ pub trait DiffSumbittable<DB: sqlx::Database>: diff::Diff {
     async fn submit_changes(self, new: &Self, pool: &sqlx::Pool<DB>) -> sqlx::Result<()>;
 }
 
+#[allow(unreachable_patterns)]
 #[async_trait]
 impl DiffSumbittable<sqlx::Sqlite> for LemmaItem {
     async fn submit_changes(self, new: &Self, pool: &sqlx::Pool<sqlx::Sqlite>) -> sqlx::Result<()> {

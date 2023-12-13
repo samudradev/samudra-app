@@ -19,7 +19,7 @@ where
 {
     fn from(value: Option<T>) -> Self {
         match value {
-            Some(T) => Self::Known(T),
+            Some(t) => Self::Known(t),
             None => Self::Unknown,
         }
     }

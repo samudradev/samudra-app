@@ -1,10 +1,7 @@
-use std::collections::HashMap;
-
 use crate::data::Item;
 use crate::prelude::*;
 
 use crate::models::cakupan::{Cakupan, InsertCakupan};
-use crate::models::cakupan_x_konsep::CakupanXKonsep;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, diff::Diff, Hash, Eq)]
 #[diff(attr(
@@ -17,7 +14,7 @@ impl Item for CakupanItem {
 
     type VIEW = LemmaWithKonsepView;
 
-    fn from_hashmap(value: &Self::MAP) -> Vec<Self> {
+    fn from_hashmap(_value: &Self::MAP) -> Vec<Self> {
         todo!()
     }
 

@@ -25,7 +25,6 @@ pub mod prelude {
 
     // Traits
     pub(crate) use crate::insertions::{ReferenceItem, ToTable, ToTableWithReference};
-    pub(crate) use crate::models::JointTable;
     pub(crate) use itertools::Itertools;
     pub(crate) use ormlite::model::Insertable;
     pub(crate) use ormlite::Model;

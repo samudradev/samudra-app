@@ -1,4 +1,3 @@
-use serde::{Deserialize, Serialize};
 use sqlx::migrate::MigrateDatabase;
 
 use crate::errors::Result;

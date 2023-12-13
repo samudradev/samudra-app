@@ -86,7 +86,7 @@ impl Item for KonsepItem {
         data
     }
 
-    fn from_views(value: &Vec<LemmaWithKonsepView>) -> Vec<Self> {
+    fn from_views(_value: &Vec<LemmaWithKonsepView>) -> Vec<Self> {
         todo!("LOW PRIOIRITY")
     }
 }
