@@ -6,6 +6,7 @@
     import type { LemmaItem } from "../bindings/LemmaItem";
     import type { KonsepItem } from "../bindings/KonsepItem";
     import type { KataAsingItem } from "../bindings/KataAsingItem";
+    import SelectGolonganKata from "../components/SelectGolonganKata.svelte";
 
     export let data: LemmaItem;
     let old_data: LemmaItem;
@@ -115,9 +116,9 @@
                     class="space-y-4"
                 >
                     [+] {data.konseps.length + 1}.
-                    <select class="select" bind:value={new_golongan_kata}>
-                        <option value="NAMA">NAMA</option>
-                    </select>
+                    <SelectGolonganKata
+                        bind:golongan_kata={new_golongan_kata}
+                    />
                     <button
                         type="submit"
                         class="text-right indicator-item btn-primary">+</button

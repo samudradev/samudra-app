@@ -4,20 +4,29 @@
   import { invoke } from "@tauri-apps/api";
   import { listen } from "@tauri-apps/api/event";
 
-  import LemmaStore from "./Data.js";
+  import LemmaStore from "./Data";
+  import GolonganKataStore from "./GolonganKataStore";
 
   import DataCard from "./lib/Datacard.svelte";
   import DataCardNew from "./lib/DataCardNew.svelte";
+  import { onMount } from "svelte";
 
   $: data = [];
+  $: golongan_kata = [];
   let database_name = "";
   let modal;
 
   const reload = () => {
     data = [];
   };
+
   LemmaStore.subscribe((value) => {
     data = value;
+  });
+
+  onMount(async () => {
+    golongan_kata = await invoke("get_golongan_kata_enumeration", {});
+    GolonganKataStore.set(golongan_kata);
   });
 
   listen("register_database", (a) => {

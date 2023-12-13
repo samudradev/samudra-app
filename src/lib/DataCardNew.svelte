@@ -4,6 +4,7 @@
     import type { KonsepItem } from "../bindings/KonsepItem";
     import { invoke } from "@tauri-apps/api";
     import type { KataAsingItem } from "../bindings/KataAsingItem";
+    import SelectGolonganKata from "../components/SelectGolonganKata.svelte";
 
     $: data = {
         id: null,
@@ -74,9 +75,9 @@
                     on:submit|preventDefault={append_new_konsep}
                     class="space-y-4"
                 >
-                    <select class="select" bind:value={golongan_kata_item}>
-                        <option value="NAMA">NAMA</option>
-                    </select>
+                    <SelectGolonganKata
+                        bind:golongan_kata={golongan_kata_item}
+                    />
                     <button
                         type="submit"
                         class="text-right indicator-item btn-primary">+</button

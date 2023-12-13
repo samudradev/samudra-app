@@ -41,6 +41,18 @@ async fn register_database_and_set_active(
 async fn count_items(config: State<'_, AppConfig>) -> Result<Counts, String> {
     Ok(config.connection().await.statistics().await.unwrap())
 }
+#[tauri::command(async)]
+async fn get_golongan_kata_enumeration(
+    config: State<'_, AppConfig>,
+) -> Result<Vec<String>, String> {
+    let res = config
+        .connection()
+        .await
+        .get_golongan_kata_enumeration()
+        .await
+        .unwrap();
+    Ok(res.iter().map(|a| a.id.to_owned()).collect::<Vec<String>>())
+}
 
 /// Insert single value
 #[tauri::command(async)]
@@ -129,7 +141,8 @@ async fn main() {
             import_from_csv,
             insert_lemma,
             submit_changes,
-            register_database_and_set_active
+            register_database_and_set_active,
+            get_golongan_kata_enumeration
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

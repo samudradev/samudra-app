@@ -22,6 +22,10 @@ pub struct Counts {
     kata_asings: i32,
 }
 
+pub struct StringID {
+    pub id: String,
+}
+
 impl Connection {
     pub async fn renew(mut self, url: String) -> Result<Self> {
         self.pool = sqlx::SqlitePool::connect(&url).await?;
@@ -38,6 +42,13 @@ impl Connection {
                 .await
                 .unwrap()),
         }
+    }
+
+    pub async fn get_golongan_kata_enumeration(self) -> Result<Vec<StringID>> {
+        sqlx::query_as!(StringID, "SELECT id FROM golongan_kata")
+            .fetch_all(&self.pool)
+            .await
+            .map_err(BackendError::from)
     }
 
     pub async fn statistics(self) -> Result<Counts> {
