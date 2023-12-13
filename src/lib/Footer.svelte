@@ -23,38 +23,34 @@
     listener();
 </script>
 
-<main>
-    <footer
-        class="footer footer-center p-3 bg-base-300 text-xs fixed bottom-0 left-0 text-center"
-    >
-        <div class="join join-vertical gap-[0em]">
-            <div class="stats join-item">
-                <div class="stat">
-                    <span class="stat-title">lemma</span>
-                    <span class="stat-value text-base">{counts.lemmas}</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-title">konsep</span>
-                    <span class="stat-value text-base">{counts.konseps}</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-title">golongan kata</span>
-                    <span class="stat-value text-base"
-                        >{counts.golongan_katas}</span
-                    >
-                </div>
-                <div class="stat">
-                    <span class="stat-title">cakupan</span>
-                    <span class="stat-value text-base">{counts.cakupans}</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-title">kata asing</span>
-                    <span class="stat-value text-base"
-                        >{counts.kata_asings}</span
-                    >
-                </div>
+<!-- TODO MEDIUM PRIORITY Make footer not cover content -->
+<footer
+    class="footer footer-center p-3 bg-base-300 text-xs fixed bottom-0 left-0 text-center"
+>
+    <div class="join join-vertical gap-[0em]">
+        <div class="stats join-item">
+            <div class="stat">
+                <span class="stat-title">lemma</span>
+                <span class="stat-value text-base">{counts.lemmas}</span>
             </div>
-            <div class="join-item card bg-neutral-100 p-2">{database_url}</div>
+            <div class="stat">
+                <span class="stat-title">konsep</span>
+                <span class="stat-value text-base">{counts.konseps}</span>
+            </div>
+            <div class="stat">
+                <span class="stat-title">golongan kata</span>
+                <span class="stat-value text-base">{counts.golongan_katas}</span
+                >
+            </div>
+            <div class="stat">
+                <span class="stat-title">cakupan</span>
+                <span class="stat-value text-base">{counts.cakupans}</span>
+            </div>
+            <div class="stat">
+                <span class="stat-title">kata asing</span>
+                <span class="stat-value text-base">{counts.kata_asings}</span>
+            </div>
         </div>
-    </footer>
-</main>
+        <div class="join-item card bg-neutral-100 p-2">{database_url}</div>
+    </div>
+</footer>

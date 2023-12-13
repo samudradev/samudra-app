@@ -56,7 +56,7 @@ impl From<&AppPaths> for AppConfig {
                 let contents = match fs::read_to_string(value.databases_toml()) {
                     Ok(c) => c,
                     Err(e) => {
-                        todo!("{}", e)
+                        todo!("LOW PRIORITY, {}", e)
                     }
                 };
                 match toml::from_str(&contents) {

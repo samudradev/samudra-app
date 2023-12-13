@@ -74,7 +74,7 @@ async fn insert_lemma(config: State<'_, AppConfig>, item: LemmaItem) -> Result<(
 /// ```
 #[tauri::command(async)]
 async fn import_from_csv(_config: State<'_, AppConfig>, _path: String) -> Result<(), String> {
-    todo!("Reimplement using views instead.")
+    todo!("LOW PRIORITY, Reimplement using views instead.")
     // match config.get_active_database().connect().await {
     //     DatabaseConnection::Disconnected => {
     //         let msg = format!("{} does not exist.", &config.get_active_database().path);
