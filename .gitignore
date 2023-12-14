@@ -24,3 +24,8 @@ dist-ssr
 *.sw?
 
 build
+
+.env
+!src-tauri/database/.env
+# Database used to check queries
+.samudra-check.db
