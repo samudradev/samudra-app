@@ -58,7 +58,7 @@ mod test {
                 KonsepItem {
                     id: DbProvided::Unknown,
                     keterangan: "gas-gas dan debu yang mengelilingi lohong hitam".into(),
-                    golongan_kata: "NAMA".into(),
+                    golongan_kata: "kata nama".into(),
                     cakupans: vec!["Astrofizik".into(), "Teori Relativiti".into()],
                     kata_asing: vec![KataAsingItem {
                         nama: "accretion disk".into(),
@@ -68,7 +68,7 @@ mod test {
                 KonsepItem {
                     id: DbProvided::Unknown,
                     keterangan: "konsep baharu yang tiada kena mengena".into(),
-                    golongan_kata: "NAMA".into(),
+                    golongan_kata: "kata nama".into(),
                     cakupans: vec![],
                     kata_asing: vec![],
                 },
@@ -89,7 +89,7 @@ mod test {
             konseps: vec![KonsepItem {
                 id: DbProvided::Unknown,
                 keterangan: "gas-gas dan debu yang mengelilingi lohong hitam".into(),
-                golongan_kata: "NAMA".into(),
+                golongan_kata: "kata nama".into(),
                 cakupans: vec!["Astrofizik".into(), "Teori Relativiti".into()],
                 kata_asing: vec![KataAsingItem {
                     nama: "accretion disk".into(),

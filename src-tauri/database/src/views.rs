@@ -57,7 +57,7 @@ mod test {
                 konseps: vec![KonsepItem {
                     id: DbProvided::Known(1),
                     keterangan: "gas-gas dan debu yang mengelilingi lohong hitam".into(),
-                    golongan_kata: "NAMA".into(),
+                    golongan_kata: "kata nama".into(),
                     cakupans: vec!["Teori Relativiti".into(), "Astrofizik".into(),],
                     kata_asing: vec![KataAsingItem {
                         nama: "accretion disk".into(),
@@ -74,7 +74,7 @@ mod test {
                 konseps: vec![KonsepItem {
                     id: DbProvided::Known(2),
                     keterangan: "sempadan terluar lohong hitam".into(),
-                    golongan_kata: "NAMA".into(),
+                    golongan_kata: "kata nama".into(),
                     cakupans: vec!["Teori Relativiti".into(), "Astrofizik".into(),],
                     kata_asing: vec![KataAsingItem {
                         nama: "event horizon".into(),
@@ -102,7 +102,7 @@ mod test {
                 konseps: vec![KonsepItem {
                     id: DbProvided::Known(1),
                     keterangan: "gas-gas dan debu yang mengelilingi lohong hitam".into(),
-                    golongan_kata: "NAMA".into(),
+                    golongan_kata: "kata nama".into(),
                     cakupans: vec!["Astrofizik".into(), "Teori Relativiti".into(),],
                     kata_asing: vec![KataAsingItem {
                         nama: "accretion disk".into(),
@@ -121,7 +121,7 @@ mod test {
             konseps: vec![KonsepItem {
                 id: DbProvided::Unknown,
                 keterangan: "gas-gas dan debu yang mengelilingi lohong hitam".into(),
-                golongan_kata: "NAMA".into(),
+                golongan_kata: "kata nama".into(),
                 cakupans: vec!["Astrofizik".into(), "Teori Relativiti".into()],
                 kata_asing: vec![],
             }],
@@ -142,7 +142,7 @@ mod test {
             konseps: vec![KonsepItem {
                 id: DbProvided::Unknown,
                 keterangan: "gas-gas dan debu yang mengelilingi lohong hitam".into(),
-                golongan_kata: "NAMA".into(),
+                golongan_kata: "kata nama".into(),
                 cakupans: vec![],
                 kata_asing: vec![KataAsingItem {
                     nama: "accretion disk".into(),
