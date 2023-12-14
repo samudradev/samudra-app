@@ -38,18 +38,34 @@ Reka bentuk dan reka fungsi aplikasi ini diinspirasikan daripada beberapa kamus 
 Prasyarat:
 1. Dapatkan npm atau yarn untuk Javascript.
 2. Dapatkan [Rust](https://www.rust-lang.org/).
-3. Dapatkan [cargo-watch](https://crates.io/crates/cargo-watch) untuk membolehkan pelaksanaan `cargo watch` untuk ujian kod melalui (cargo sudah tersedia melalui rust):
-    ```
-    cargo install cargo-watch
-    ```
-4. Dapatkan [tauri](https://tauri.app/).
-5. Dapatkan pakej-pakej Javascript melalui:
+3. Dapatkan [tauri](https://tauri.app/).
+4. Dapatkan pakej-pakej Javascript melalui:
     ```
     npm install
     ```
     atau
     ```
     yarn install
+    ```
+5. Dapatkan [cargo-watch](https://crates.io/crates/cargo-watch) (cargo sudah tersedia melalui rust) untuk membolehkan pelaksanaan `cargo watch` untuk ujian kod melalui :
+    ```
+    cargo install cargo-watch
+    ```
+6. Dapatkan [sqlx-cli](https://github.com/launchbadge/sqlx/tree/main/sqlx-cli) melalui:
+    ```
+    cargo install sqlx-cli
+    ```
+    kemudian sediakan database contoh untuk dapatkan membolehkan sqlx semak queri:
+    ```
+    sqlx database setup --database-url sqlite:src-tauri/.samudra-check.db --source src-tauri/database/migrations
+    ```
+    atau (dimudahkan melalui package.json)
+    ```
+    npm run setup-db
+    ```
+    atau
+    ```
+    yarn setup-db
     ```
 
 ### Pembangunan
@@ -72,7 +88,7 @@ Prasyarat:
     ```
     cargo  watch -x \"test --workspace\" -C src-tauri/ -c
     ```
-    atau
+    atau (dimudahkan melalui package.json)
     ```
     npm run watch
     ```
