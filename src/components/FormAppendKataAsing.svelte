@@ -1,5 +1,6 @@
 <script lang="ts">
     import type { KataAsingItem } from "../bindings/KataAsingItem";
+    import DisplayKataAsings from "./DisplayKataAsings.svelte";
 
     export let kata_asings: KataAsingItem[];
     let kata_asing_item: KataAsingItem = { nama: "", bahasa: "" };
@@ -18,6 +19,7 @@
     <div class="label">
         <span class="label-text-alt">Kata asing</span>
     </div>
+    <DisplayKataAsings bind:kata_asings />
     <span class="join w-full">
         <input
             type="text"
@@ -31,9 +33,6 @@
             class="textarea join-item w-1/2"
             bind:value={kata_asing_item.bahasa}
         />
-        <button type="submit" class="join-item">+</button>
+        <button type="submit" class="join-item btn-primary">+</button>
     </span>
-    {#each kata_asings as kata_asing}
-        <div>{kata_asing.nama}: {kata_asing.bahasa}</div>
-    {/each}
 </form>

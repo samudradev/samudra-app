@@ -25,7 +25,7 @@
 <div class="card card-normal m-2 w-[40em] bg-blue-100 shadow-xl">
     <div class="card-body">
         <FormAddLemma bind:lemma={data.lemma} submit={insert_lemma} />
-        <FormAppendKonsep bind:data />
         <DisplayKonseps konseps={data.konseps} />
+        <FormAppendKonsep bind:data />
     </div>
 </div>

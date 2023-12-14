@@ -1,4 +1,6 @@
 <script lang="ts">
+    import DisplayCakupans from "./DisplayCakupans.svelte";
+
     export let cakupans: string[];
     let cakupan_item: string;
     function append_new_cakupan() {
@@ -12,6 +14,7 @@
     <div class="label">
         <span class="label-text-alt">Cakupan</span>
     </div>
+    <DisplayCakupans bind:cakupans />
     <span class="join w-full">
         <input
             type="text"
@@ -19,9 +22,6 @@
             class="textarea join-item w-full"
             bind:value={cakupan_item}
         />
-        <button type="submit" class="join-item">+</button>
+        <button type="submit" class="join-item btn-primary">+</button>
     </span>
-    {#each cakupans as cakupan}
-        <div>{cakupan}</div>
-    {/each}
 </form>
