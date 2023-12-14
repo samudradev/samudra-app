@@ -3,20 +3,21 @@
     import { onMount } from "svelte";
     import { listen } from "@tauri-apps/api/event";
     import type { Counts } from "../bindings/Counts";
+    import LemmaStore from "../Data";
 
     $: database_url = "";
     $: counts = {} as Counts;
     onMount(async () => {
         counts = await invoke("count_items", {});
+        get_active_database_url();
     });
-
+    LemmaStore.subscribe(async () => {
+        counts = await invoke("count_items", {});
+    });
     async function get_active_database_url() {
         database_url = await invoke("active_database_url");
     }
 
-    onMount(() => {
-        get_active_database_url();
-    });
     const listener = async () => {
         await listen("active_database_changed", get_active_database_url);
     };

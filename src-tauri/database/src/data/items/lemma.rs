@@ -57,6 +57,14 @@ impl ToTable<sqlx::Sqlite> for LemmaItem {
         }
         Ok(lemma)
     }
+
+    async fn remove(&self, pool: &sqlx::Pool<sqlx::Sqlite>) -> Result<()> {
+        sqlx::query_file!("transactions/delete_lemma.sql", self.lemma)
+            .execute(pool)
+            .await
+            .unwrap();
+        Ok(())
+    }
 }
 
 type KonsepHashMap = HashMap<(i64, Option<String>, Option<String>), Vec<LemmaWithKonsepView>>;

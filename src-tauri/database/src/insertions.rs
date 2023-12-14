@@ -6,6 +6,10 @@ pub trait ToTable<DB: sqlx::Database> {
 
     /// Insert values while checking for duplicates
     async fn insert_safe(self, pool: &sqlx::Pool<DB>) -> Result<Self::OUTPUT>;
+
+    async fn remove(&self, pool: &sqlx::Pool<DB>) -> Result<()> {
+        todo!("LOW PRIORITY Default implementation of ToTable")
+    }
 }
 #[async_trait::async_trait]
 pub trait ToTableWithReference<DB: sqlx::Database> {

@@ -19,9 +19,7 @@ use database;
 use database::data::{Item, LemmaItem};
 use database::operations::DiffSumbittable;
 
-// TODO FEAT Delete data
 // TODO FEAT Share picture
-// TODO DOCS README
 // TODO Manage errors gracefully
 
 /// Exposes the active database URL to the frontend.
@@ -68,6 +66,14 @@ async fn get_golongan_kata_enumeration(
 async fn insert_lemma(config: State<'_, AppConfig>, item: LemmaItem) -> Result<(), String> {
     let conn = config.connection().await.pool;
     item.insert_safe(&conn).await.unwrap();
+    Ok(())
+}
+
+/// Delete single lemma
+#[tauri::command(async)]
+async fn delete_lemma(config: State<'_, AppConfig>, item: LemmaItem) -> Result<(), String> {
+    let conn = config.connection().await.pool;
+    item.remove(&conn).await.unwrap();
     Ok(())
 }
 
@@ -132,7 +138,7 @@ async fn submit_changes(
     new: LemmaItem,
 ) -> Result<(), String> {
     let db = config.connection().await.pool;
-    dbg!(old.submit_changes(&new, &db).await.unwrap());
+    old.submit_changes(&new, &db).await.unwrap();
     Ok(())
 }
 
@@ -152,6 +158,7 @@ async fn main() {
             count_items,
             import_from_csv,
             insert_lemma,
+            delete_lemma,
             submit_changes,
             register_database_and_set_active,
             get_golongan_kata_enumeration
