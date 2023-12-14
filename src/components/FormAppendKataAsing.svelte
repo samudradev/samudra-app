@@ -12,14 +12,14 @@
     }
 </script>
 
+<div class="label">
+    <span class="label-text-alt">Kata asing</span>
+</div>
+<DisplayKataAsings bind:kata_asings />
 <form
     on:submit|preventDefault={append_new_kata_asing}
     class="form-control w-full"
 >
-    <div class="label">
-        <span class="label-text-alt">Kata asing</span>
-    </div>
-    <DisplayKataAsings bind:kata_asings />
     <span class="join w-full">
         <input
             type="text"

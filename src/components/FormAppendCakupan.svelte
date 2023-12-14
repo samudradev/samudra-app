@@ -10,11 +10,11 @@
     }
 </script>
 
+<div class="label">
+    <span class="label-text-alt">Cakupan</span>
+</div>
+<DisplayCakupans bind:cakupans />
 <form on:submit|preventDefault={append_new_cakupan} class="w-full">
-    <div class="label">
-        <span class="label-text-alt">Cakupan</span>
-    </div>
-    <DisplayCakupans bind:cakupans />
     <span class="join w-full">
         <input
             type="text"
