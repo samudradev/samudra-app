@@ -59,7 +59,7 @@ impl ToTable<sqlx::Sqlite> for LemmaItem {
     }
 }
 
-type KonsepHashMap = HashMap<(i64, String, String), Vec<LemmaWithKonsepView>>;
+type KonsepHashMap = HashMap<(i64, Option<String>, Option<String>), Vec<LemmaWithKonsepView>>;
 type LemmaWithKonsepHashMap = HashMap<(i64, String), KonsepHashMap>;
 
 pub trait Item: Sized {
@@ -74,11 +74,14 @@ impl Item for KonsepItem {
     type VIEW = LemmaWithKonsepView;
     fn from_hashmap(value: &KonsepHashMap) -> Vec<Self> {
         let mut data = Vec::new();
-        for (konsep, views) in value.into_iter() {
+        for (konsep, views) in value.into_iter().filter(|((_, kon, _), _)| kon.is_some()) {
             data.push(KonsepItem {
                 id: DbProvided::Known(konsep.0.clone()),
-                keterangan: konsep.1.clone(),
-                golongan_kata: konsep.2.clone(),
+                keterangan: konsep
+                    .1
+                    .clone()
+                    .expect("None should have been filtered out"),
+                golongan_kata: konsep.2.clone().unwrap_or_default(),
                 cakupans: CakupanItem::from_views(views),
                 kata_asing: KataAsingItem::from_views(views),
             })
@@ -126,13 +129,8 @@ impl IntoHashMap for Vec<LemmaWithKonsepView> {
             .map(|(k, v): ((i64, String), Vec<LemmaWithKonsepView>)| {
                 (
                     k,
-                    v.into_iter().into_group_map_by(|a| {
-                        (
-                            a.k_id,
-                            a.konsep.as_ref().unwrap().clone(),
-                            a.golongan_kata.clone().unwrap_or_default(),
-                        )
-                    }),
+                    v.into_iter()
+                        .into_group_map_by(|a| (a.k_id, a.konsep.clone(), a.golongan_kata.clone())),
                 )
             })
             .collect()
