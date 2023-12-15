@@ -24,9 +24,8 @@
     listener();
 </script>
 
-<!-- TODO MEDIUM PRIORITY Make footer not cover content -->
 <footer
-    class="footer footer-center p-3 bg-base-300 text-xs fixed bottom-0 left-0 text-center"
+    class="footer footer-center p-3 bg-transparent text-xs fixed inset-x-0 bottom-0 text-center"
 >
     <div class="join join-vertical gap-[0em]">
         <div class="stats join-item">

@@ -93,6 +93,7 @@
     {/each}
   </div>
   <!--  <button on:click={import_csv}>Import from CSV</button>-->
-
+  <!-- To give space for footer -->
+  <div class="min-h-[8em]"></div>
   <Footer />
 </main>
