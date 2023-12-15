@@ -29,20 +29,33 @@
             });
         });
     }
+    function cancel() {
+        data = _.cloneDeep(old_data);
+    }
 
     export let toggle_display;
 </script>
 
-<div class="card card-normal m-4 w-[40em] bg-blue-100 shadow-xl">
-    <div class="card-body">
-        <FormAddLemma
-            bind:lemma={data.lemma}
-            submit={submit_changes}
-            toggle={toggle_display}
-        />
-        <button on:click={delete_lemma} on:click={toggle_display}>Delete</button
+<div class="relative w-[30em]">
+    <div class="card card-normal m-4 bg-blue-100 shadow-xl">
+        <div class="card-body">
+            <FormAddLemma
+                bind:lemma={data.lemma}
+                submit={submit_changes}
+                toggle={toggle_display}
+            />
+            <DisplayKonseps bind:konseps={data.konseps} />
+            <FormAppendKonsep bind:data />
+        </div>
+    </div>
+    <div class="menu menu-vertical absolute -right-[6em] top-0 py-[1em]">
+        <button class="my-[0.2em]" on:click={cancel} on:click={toggle_display}
+            >Cancel</button
         >
-        <DisplayKonseps bind:konseps={data.konseps} />
-        <FormAppendKonsep bind:data />
+        <button
+            class="my-[0.2em]"
+            on:click={delete_lemma}
+            on:click={toggle_display}>Delete</button
+        >
     </div>
 </div>

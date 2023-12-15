@@ -22,10 +22,12 @@
     }
 </script>
 
-<div class="card card-normal m-2 w-[40em] bg-blue-100 shadow-xl">
-    <div class="card-body">
-        <FormAddLemma bind:lemma={data.lemma} submit={insert_lemma} />
-        <DisplayKonseps konseps={data.konseps} />
-        <FormAppendKonsep bind:data />
+<div class="relative w-[30em]">
+    <div class="card card-normal m-4 bg-blue-100 shadow-xl">
+        <div class="card-body">
+            <FormAddLemma bind:lemma={data.lemma} submit={insert_lemma} />
+            <DisplayKonseps konseps={data.konseps} />
+            <FormAppendKonsep bind:data />
+        </div>
     </div>
 </div>

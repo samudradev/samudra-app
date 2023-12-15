@@ -32,7 +32,7 @@
 
 <div class="indicator w-full mt-4">
     <div
-        class="text-left card-bordered p-2 border-primary border-2 rounded-lg w-full"
+        class="text-left card-bordered border-primary border-2 rounded-lg w-full"
     >
         <form on:submit|preventDefault={append_new_konsep} class="space-y-4">
             <SelectGolonganKata bind:golongan_kata={golongan_kata_item} />
