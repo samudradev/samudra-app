@@ -19,6 +19,21 @@
       },
       "dialog": {
         "open": true
+      },
+      "fs": {
+        "all": false,
+        "copyFile": false,
+        "createDir": false,
+        "exists": false,
+        "readDir": false,
+        "readFile": true,
+        "removeDir": false,
+        "removeFile": false,
+        "renameFile": false,
+        "scope": [
+          "$DOCUMENT/Samudra/**"
+        ],
+        "writeFile": true
       }
     },
     "bundle": {
