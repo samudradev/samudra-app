@@ -50,7 +50,7 @@
                 class="flex justify-between text-neutral-100 border-0 mx-4 -mt-2 mb-2"
             >
                 <span> @{display_name} </span>
-                <span class="badge badge-ghost"> Samudra v0.2.3 </span>
+                <span class="badge badge-ghost"> Samudra v0.2.4 </span>
                 <span> {new Date().toISOString().split("T")[0]} </span>
             </div>
         </div>
