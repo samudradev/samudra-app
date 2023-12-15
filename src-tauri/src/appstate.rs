@@ -36,6 +36,7 @@ impl DatabaseConfig {
 ///
 /// The default is initialized with [`AppConfig::fallback`]:
 /// ```toml
+/// display_name = "DISPLAY_NAME_UNSET"
 /// active = "default"
 ///
 /// [databases.default]
@@ -44,6 +45,7 @@ impl DatabaseConfig {
 /// ```
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AppConfig {
+    display_name: Mutex<String>,
     active: Mutex<String>,
     databases: Mutex<HashMap<String, DatabaseConfig>>,
 }
@@ -82,9 +84,17 @@ impl From<&AppPaths> for AppConfig {
 impl AppConfig {
     fn null() -> Self {
         Self {
+            display_name: "DISPLAY_NAME_UNSET".to_string().into(),
             active: "".to_string().into(),
             databases: HashMap::new().into(),
         }
+    }
+
+    pub fn set_display_name(&self, name: String) {
+        *self.display_name.lock().unwrap() = name.into();
+    }
+    pub fn get_display_name(&self) -> String {
+        self.display_name.lock().unwrap().to_string()
     }
 
     /// Sets the default value with the provided path.
@@ -113,7 +123,7 @@ impl AppConfig {
 
     pub fn get_active_database_url(&self) -> String {
         let name = &self.active.lock().unwrap().to_string();
-        let hashmap = dbg!(self.databases.lock().unwrap());
+        let hashmap = self.databases.lock().unwrap();
         hashmap.get(&name.clone()).unwrap().path.clone()
     }
 
@@ -160,6 +170,9 @@ impl AppPaths {
         if !&self.storage_dir().exists() {
             std::fs::create_dir(&self.storage_dir()).unwrap();
         }
+        if !&self.export_dir().exists() {
+            std::fs::create_dir(&self.export_dir()).unwrap();
+        }
         self
     }
     pub fn databases_toml(&self) -> PathBuf {
@@ -168,5 +181,8 @@ impl AppPaths {
 
     pub fn storage_dir(&self) -> PathBuf {
         PathBuf::from_iter([self.root.clone(), "storage".into()])
+    }
+    pub fn export_dir(&self) -> PathBuf {
+        PathBuf::from_iter([self.root.clone(), "export".into()])
     }
 }

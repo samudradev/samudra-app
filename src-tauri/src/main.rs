@@ -28,6 +28,26 @@ async fn active_database_url(config: State<'_, AppConfig>) -> Result<String, Str
     Ok(config.get_active_database_url())
 }
 
+/// Display name for sharing
+#[tauri::command(async)]
+async fn get_display_name(config: State<'_, AppConfig>) -> Result<String, String> {
+    Ok(config.get_display_name())
+}
+
+/// Set display name for sharing
+#[tauri::command(async)]
+async fn set_display_name(
+    config: State<'_, AppConfig>,
+    paths: State<'_, AppPaths>,
+    name: String,
+) -> Result<(), String> {
+    config.set_display_name(name);
+    config
+        .to_toml(&paths.databases_toml())
+        .expect("Writing to toml failed");
+    Ok(())
+}
+
 #[tauri::command(async)]
 async fn register_database_and_set_active(
     paths: State<'_, AppPaths>,
@@ -161,7 +181,9 @@ async fn main() {
             delete_lemma,
             submit_changes,
             register_database_and_set_active,
-            get_golongan_kata_enumeration
+            get_golongan_kata_enumeration,
+            get_display_name,
+            set_display_name,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

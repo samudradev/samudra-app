@@ -14,7 +14,9 @@
   $: data = [];
   $: golongan_kata = [];
   let database_name = "";
-  let modal;
+  let display_name = "";
+  let db_modal;
+  let name_modal;
 
   const reload = () => {
     data = [];
@@ -30,15 +32,21 @@
   });
 
   listen("register_database", (a) => {
-    modal.showModal();
+    db_modal.showModal();
+  });
+  listen("set_display_name", (a) => {
+    name_modal.showModal();
   });
 
   async function register_database() {
-    console.log(database_name);
     if (database_name.trim().length != 0) {
       await invoke("register_database_and_set_active", { name: database_name });
-      modal.close();
+      db_modal.close();
     }
+  }
+  async function set_display_name() {
+    await invoke("set_display_name", { name: display_name });
+    db_modal.close();
   }
 
   // async function import_csv() {
@@ -57,30 +65,11 @@
 </script>
 
 <main>
-  <dialog bind:this={modal} class="modal">
-    <div class="modal-box">
-      <h3 class="font-bold text-lg">Register Database</h3>
-      <p class="py-4">
-        Give the database a name (if already available, will not create new but
-        change that as active)
-      </p>
-      <form class="join">
-        <input
-          type="text"
-          class="textarea join-item"
-          bind:value={database_name}
-        />
-        <button on:click={register_database} class="join-item">Confirm</button>
-      </form>
-      <button on:click={() => modal.close()} class="btn-warning">Cancel</button>
-    </div>
-  </dialog>
-  <hero class="hero min-h-200 bg-base-200 pt-10 pb-5">
+  <hero class="hero min-h-200 pt-10 pb-5">
     <div class="hero-content text-center">
       <div class="max-w-md">
         <h1 class="text-5xl font-bold pb-10">Samudra</h1>
-        <SearchBar />
-        <button on:click={reload}>Refresh</button>
+        <SearchBar {reload} />
       </div>
     </div>
   </hero>
@@ -97,3 +86,36 @@
   <div class="min-h-[8em]"></div>
   <Footer />
 </main>
+
+<dialog bind:this={db_modal} class="modal">
+  <div class="modal-box">
+    <h3 class="font-bold text-lg">Register Database</h3>
+    <p class="py-4">
+      Give the database a name (if already available, will not create new but
+      change that as active)
+    </p>
+    <form class="join">
+      <input
+        type="text"
+        class="textarea join-item"
+        bind:value={database_name}
+      />
+      <button on:click={register_database} class="join-item">Confirm</button>
+    </form>
+    <button on:click={() => db_modal.close()} class="btn-warning">Close</button>
+  </div>
+</dialog>
+
+<dialog bind:this={name_modal} class="modal">
+  <div class="modal-box">
+    <h3 class="font-bold text-lg">Register Display Name</h3>
+    <p class="py-4">Tell me your display name</p>
+    <form class="join">
+      <input type="text" class="textarea join-item" bind:value={display_name} />
+      <button on:click={set_display_name} class="join-item">Confirm</button>
+    </form>
+    <button on:click={() => name_modal.close()} class="btn-warning"
+      >Close</button
+    >
+  </div>
+</dialog>

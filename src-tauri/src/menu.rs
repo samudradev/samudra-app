@@ -12,9 +12,11 @@ impl MenuBar {
 
 impl Default for MenuBar {
     fn default() -> Self {
-        let database_submenu = Submenu::new(
-            "Database",
-            Menu::new().add_item(CustomMenuItem::new("register_database", "Create")),
+        let mut database_submenu = Submenu::new(
+            "Config",
+            Menu::new()
+                .add_item(CustomMenuItem::new("register_database", "Create database"))
+                .add_item(CustomMenuItem::new("set_display_name", "Set display name")),
         );
 
         MenuBar {

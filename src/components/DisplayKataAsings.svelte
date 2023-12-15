@@ -5,9 +5,14 @@
 </script>
 
 <div class="column">
+    {#if kata_asings.length != 0}
+        bahasa lain:
+    {/if}
     {#each kata_asings as kata_asing}
         <div class="badge border-secondary">
-            {kata_asing.nama} ({kata_asing.bahasa})
+            <i class="pr-[2px]">{kata_asing.nama}</i><span
+                >({kata_asing.bahasa})</span
+            >
         </div>
     {/each}
 </div>

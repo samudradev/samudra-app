@@ -27,10 +27,10 @@ Reka bentuk dan reka fungsi aplikasi ini diinspirasikan daripada beberapa kamus 
 - [x] Mewujudkan pangkalan data sqlite dalam folder berbeza.
 - [x] Tunjukkan jumlah item mengikut jenis.
 - [x] Memasukkan lemma beserta konsep, golongan kata, cakupan, dan kata asing.
-- [x] Dapatkan lemma.
+- [x] Dapatkan dan padam lemma.
 - [x] Sunting lemma dan konsep.
 - [ ] Sunting bahagian-bahagian lemma lain.
-- [ ] Padam bahagian-bahagian lemma atau keseluruhan lemma.
+- [ ] Padam bahagian-bahagian lemma.
 - [ ] Import dari CSV (dalam pembaikan).
 - [ ] Kongsi data dalam bentuk gambar.
 

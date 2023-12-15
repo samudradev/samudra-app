@@ -4,6 +4,7 @@
   import LemmaStore from "../Data";
   import type { LemmaItem } from "../bindings/LemmaItem";
 
+  export let reload: VoidFunction;
   let lemma = "";
 
   async function get_lemma() {
@@ -14,9 +15,15 @@
   }
 </script>
 
-<div>
-  <form class="row" on:submit|preventDefault={get_lemma}>
-    <input id="greet-input" placeholder="Lemma..." bind:value={lemma} />
-    <button type="submit">Get</button>
+<div class="row">
+  <form class="join space-x-0" on:submit|preventDefault={get_lemma}>
+    <input
+      id="greet-input"
+      class="join-item input"
+      placeholder="Lemma..."
+      bind:value={lemma}
+    />
+    <button class="btn btn-primary join-item" type="submit">Get</button>
   </form>
+  <button class="btn btn-chost mx-2" on:click={reload}>Refresh</button>
 </div>

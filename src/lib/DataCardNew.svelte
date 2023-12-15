@@ -22,7 +22,7 @@
     }
 </script>
 
-<div class="relative w-[30em]">
+<div class="relative w-[35em]">
     <div class="card card-normal m-4 bg-blue-100 shadow-xl">
         <div class="card-body">
             <FormAddLemma bind:lemma={data.lemma} submit={insert_lemma} />
