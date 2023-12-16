@@ -32,7 +32,7 @@ Reka bentuk dan reka fungsi aplikasi ini diinspirasikan daripada beberapa kamus 
 - [ ] Sunting bahagian-bahagian lemma lain.
 - [ ] Padam bahagian-bahagian lemma.
 - [ ] Import dari CSV (dalam pembaikan).
-- [ ] Kongsi data dalam bentuk gambar.
+- [x] Kongsi data dalam bentuk gambar.
 
 ## Pengaturcaraan
 Prasyarat:
