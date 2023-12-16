@@ -33,7 +33,11 @@ impl Connection {
 
     pub async fn from(url: String) -> Self {
         match sqlx::SqlitePool::connect(&url).await {
-            Ok(pool) => Self { pool },
+            Ok(pool) => {
+                // Automatically migrate to current version
+                sqlx::migrate!().run(&pool).await.expect("Migration error");
+                Self { pool }
+            }
             Err(_) => dbg!(Self::create_and_migrate(url)
                 .await
                 .unwrap()

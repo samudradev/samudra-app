@@ -11,6 +11,7 @@ mod menu;
 use appstate::AppConfig;
 use appstate::AppPaths;
 use database::insertions::ToTable;
+use database::states::Connection;
 use database::states::Counts;
 use database::views::LemmaWithKonsepView;
 use tauri::State;
@@ -54,9 +55,12 @@ async fn register_database_and_set_active(
     config: State<'_, AppConfig>,
     name: String,
 ) -> Result<String, tauri::Error> {
-    Ok(config
-        .register_database_and_set_active(name.clone(), &paths)?
-        .get_active_database_url())
+    let config = config.register_database_and_set_active(name.clone(), &paths)?;
+    let url = config.get_active_database_url();
+    let _ = Connection::create_and_migrate(url.clone())
+        .await
+        .expect("Error migrating");
+    Ok(url)
 }
 
 #[tauri::command(async)]
@@ -167,6 +171,7 @@ async fn submit_changes(
 async fn main() {
     let paths = appstate::AppPaths::default().initialize_root_dir();
     let config = appstate::AppConfig::from(&paths);
+
     tauri::Builder::default()
         .menu(menu::MenuBar::default().as_menu())
         .on_menu_event(event::on_menu_event)
