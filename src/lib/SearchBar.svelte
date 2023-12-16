@@ -1,12 +1,17 @@
 <script lang="ts">
+  // APIs
   import { invoke } from "@tauri-apps/api/tauri";
-
-  import LemmaStore from "../Data";
+  // Components
+  // Stores
+  import LemmaStore from "./stores/LemmaStore";
+  // Types
   import type { LemmaItem } from "../bindings/LemmaItem";
 
+  // Initialize values
   export let reload: VoidFunction;
-  let lemma = "";
-
+  let lemma: String = "";
+  // Event listeners
+  // Callables
   async function get_lemma() {
     let value: LemmaItem[] = await invoke("get_lemma", {
       lemma: lemma,

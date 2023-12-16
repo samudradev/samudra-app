@@ -1,27 +1,37 @@
 <script lang="ts">
+    // APIs
     import { invoke } from "@tauri-apps/api/tauri";
-    import { onMount } from "svelte";
     import { listen } from "@tauri-apps/api/event";
+    import { onMount } from "svelte";
+    // Components
+    // Stores
+    import LemmaStore from "./stores/LemmaStore";
+    // Types
     import type { Counts } from "../bindings/Counts";
-    import LemmaStore from "../Data";
 
-    $: database_url = "";
-    $: counts = {} as Counts;
+    // Initialize values
+    $: database_url = "" as String;
+    $: counts = {
+        lemmas: 0,
+        konseps: 0,
+        golongan_katas: 0,
+        cakupans: 0,
+        kata_asings: 0,
+    } as Counts;
+
     onMount(async () => {
         counts = await invoke("count_items", {});
         get_active_database_url();
     });
+    // Event listeners
     LemmaStore.subscribe(async () => {
         counts = await invoke("count_items", {});
     });
+    listen("active_database_changed", get_active_database_url);
+    // Callables
     async function get_active_database_url() {
         database_url = await invoke("active_database_url");
     }
-
-    const listener = async () => {
-        await listen("active_database_changed", get_active_database_url);
-    };
-    listener();
 </script>
 
 <footer

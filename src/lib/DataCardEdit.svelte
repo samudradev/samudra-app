@@ -1,24 +1,31 @@
 <script lang="ts">
-    import _ from "lodash";
+    // APIs
     import { invoke } from "@tauri-apps/api";
     import { onMount } from "svelte";
-
+    import _ from "lodash";
+    // Components
+    import FormAppendKonsep from "./components/FormAppendKonsep.svelte";
+    import DisplayKonseps from "./components/DisplayKonseps.svelte";
+    import FormAddLemma from "./components/FormAddLemma.svelte";
+    // Stores
+    import LemmaStore from "./stores/LemmaStore";
+    // Types
     import type { LemmaItem } from "../bindings/LemmaItem";
-    import FormAppendKonsep from "../components/FormAppendKonsep.svelte";
-    import DisplayKonseps from "../components/DisplayKonseps.svelte";
-    import FormAddLemma from "../components/FormAddLemma.svelte";
-    import LemmaStore from "../Data";
 
+    // Initialize values
     export let data: LemmaItem;
+    export let toggle_display: VoidFunction;
     let old_data: LemmaItem;
 
     onMount(() => {
         old_data = _.cloneDeep(data);
     });
-
+    // Event listeners
+    // Callable
     async function submit_changes() {
         await invoke("submit_changes", { old: old_data, new: data });
     }
+
     async function delete_lemma() {
         await invoke("delete_lemma", { item: data });
         LemmaStore.update((value) => {
@@ -29,11 +36,10 @@
             });
         });
     }
+
     function cancel() {
         data = _.cloneDeep(old_data);
     }
-
-    export let toggle_display;
 </script>
 
 <div class="relative w-[35em]">

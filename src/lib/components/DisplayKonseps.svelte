@@ -1,9 +1,16 @@
 <script lang="ts">
-    import type { KonsepItem } from "../bindings/KonsepItem";
+    // APIs
+    // Components
     import DisplayCakupans from "./DisplayCakupans.svelte";
     import DisplayKataAsings from "./DisplayKataAsings.svelte";
+    // Stores
+    // Types
+    import type { KonsepItem } from "../../bindings/KonsepItem";
 
-    export let konseps: KonsepItem[];
+    // Initialize values
+    export let konseps: KonsepItem[] = [];
+    // Event listeners
+    // Callables
 </script>
 
 {#each konseps as konsep, i}

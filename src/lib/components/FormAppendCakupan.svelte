@@ -1,8 +1,15 @@
 <script lang="ts">
+    // APIs
+    // Components
     import DisplayCakupans from "./DisplayCakupans.svelte";
+    // Stores
+    // Types
 
+    // Initialize values
     export let cakupans: string[];
     let cakupan_item: string;
+    // Event listeners
+    // Callables
     function append_new_cakupan() {
         cakupans.push(cakupan_item);
         cakupans = cakupans; // To force reload

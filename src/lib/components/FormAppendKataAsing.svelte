@@ -1,10 +1,16 @@
 <script lang="ts">
-    import type { KataAsingItem } from "../bindings/KataAsingItem";
+    // APIs
+    // Components
     import DisplayKataAsings from "./DisplayKataAsings.svelte";
+    // Stores
+    // Types
+    import type { KataAsingItem } from "../../bindings/KataAsingItem";
 
+    // Initialize values
     export let kata_asings: KataAsingItem[];
     let kata_asing_item: KataAsingItem = { nama: "", bahasa: "" };
-
+    // Event listeners
+    // Callables
     function append_new_kata_asing() {
         kata_asings.push(kata_asing_item);
         kata_asings = kata_asings; // To force reload

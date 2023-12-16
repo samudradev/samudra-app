@@ -1,5 +1,13 @@
 <script lang="ts">
-    export let cakupans: string[];
+    // APIs
+    // Components
+    // Stores
+    // Types
+
+    // Initialize values
+    export let cakupans: string[] = [];
+    // Event listeners
+    // Callables
 </script>
 
 <div class="column">

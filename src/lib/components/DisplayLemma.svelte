@@ -1,6 +1,14 @@
 <script>
+    // APIs
+    // Components
     import DisplayKonseps from "./DisplayKonseps.svelte";
+    // Stores
+    // Types
+
+    // Initialize values
     export let data;
+    // Event listeners
+    // Callables
 </script>
 
 <div class="card card-normal m-4 bg-base-100 shadow-xl">

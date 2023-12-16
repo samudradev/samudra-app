@@ -1,7 +1,15 @@
 <script lang="ts">
+    // APIs
+    // Components
+    // Stores
+    // Types
+
+    // Initialize values
     export let lemma: string;
     export let submit: VoidFunction;
     export let toggle: VoidFunction = () => {};
+    // Event listeners
+    // Callables
 </script>
 
 <form class="join">

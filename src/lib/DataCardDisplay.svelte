@@ -1,14 +1,19 @@
 <script lang="ts">
+    // APIs
+    // Components
+    import DisplayLemma from "./components/DisplayLemma.svelte";
+    // Stores
+    import LemmaExportStore from "./stores/LemmaExportStore";
+    // Types
     import type { LemmaItem } from "../bindings/LemmaItem";
-    import DisplayLemma from "../components/DisplayLemma.svelte";
-    import ModalExportPng from "../components/ModalExportPng.svelte";
 
+    // Initialize values
     export let data: LemmaItem;
-
     export let toggle_edit: VoidFunction;
-    let export_png_modal;
+    // Event listeners
+    // Callable
     function open_export_modal() {
-        export_png_modal.showModal();
+        LemmaExportStore.set(data);
     }
 </script>
 
@@ -24,6 +29,3 @@
         </button>
     </div>
 </div>
-
-<!-- TODO REFACTOR Put into main app to avoid rendering multiple export modal -->
-<ModalExportPng bind:data bind:modal={export_png_modal} />

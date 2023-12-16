@@ -1,7 +1,14 @@
 <script lang="ts">
-    import type { KataAsingItem } from "../bindings/KataAsingItem";
+    // APIs
+    // Components
+    // Stores
+    // Types
+    import type { KataAsingItem } from "../../bindings/KataAsingItem";
 
-    export let kata_asings: KataAsingItem[];
+    // Initialize values
+    export let kata_asings: KataAsingItem[] = [];
+    // Event listeners
+    // Callables
 </script>
 
 <div class="column">

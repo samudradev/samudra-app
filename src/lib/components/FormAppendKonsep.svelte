@@ -1,18 +1,23 @@
 <script lang="ts">
-    import type { KonsepItem } from "../bindings/KonsepItem";
-    import type { LemmaItem } from "../bindings/LemmaItem";
-
+    // APIs
+    // Components
     import FormAppendCakupan from "./FormAppendCakupan.svelte";
     import FormAppendKataAsing from "./FormAppendKataAsing.svelte";
     import SelectGolonganKata from "./SelectGolonganKata.svelte";
+    // Stores
+    // Types
+    import type { KonsepItem } from "../../bindings/KonsepItem";
+    import type { LemmaItem } from "../../bindings/LemmaItem";
+    import type { KataAsingItem } from "../../bindings/KataAsingItem";
 
+    // Initialize values
     export let data: LemmaItem;
+    $: cakupan_list = [] as string[];
+    $: kata_asing_list = [] as KataAsingItem[];
     let keterangan_item: string;
     let golongan_kata_item: string;
-
-    $: cakupan_list = [];
-    $: kata_asing_list = [];
-
+    // Event listeners
+    // Callables
     function append_new_konsep() {
         data.konseps.push(
             Object.assign({} as KonsepItem, {
