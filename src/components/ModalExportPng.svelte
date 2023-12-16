@@ -33,6 +33,7 @@
             backgroundColor: "hsl(259 94% 51%)",
             height: node.scrollHeight + 10,
             width: node.scrollWidth + 10,
+            pixelRatio: 5,
         }).then(async (data_url) => {
             writeBinaryFile(filepath, convertDataURIToBinary(data_url), {
                 dir: BaseDirectory.Document,
