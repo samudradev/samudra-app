@@ -22,6 +22,6 @@
 <select class="select" bind:value={golongan_kata} required>
     <option value="" disabled selected>Golongan kata</option>
     {#each golongan_kata_list as gk}
-        <option value={golongan_kata}>{gk}</option>
+        <option value={gk}>{gk}</option>
     {/each}
 </select>
