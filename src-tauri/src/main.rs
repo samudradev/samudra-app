@@ -73,12 +73,23 @@ async fn count_items(config: State<'_, AppConfig>) -> Result<Counts, String> {
 async fn get_golongan_kata_enumeration(
     config: State<'_, AppConfig>,
 ) -> Result<Vec<String>, String> {
-    let res = config
+    let mut res = config
         .connection()
         .await
         .get_golongan_kata_enumeration()
         .await
         .unwrap();
+    if res.len() == 0 {
+        res = config
+            .connection()
+            .await
+            .populate_with_presets()
+            .await
+            .expect("Error Populating preset")
+            .get_golongan_kata_enumeration()
+            .await
+            .unwrap();
+    }
     Ok(res
         .iter()
         .map(|a| a.item.to_owned())
