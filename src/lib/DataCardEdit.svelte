@@ -11,11 +11,20 @@
     import LemmaStore from "./stores/LemmaStore";
     // Types
     import type { LemmaItem } from "../bindings/LemmaItem";
+    import type { KonsepItem } from "../bindings/KonsepItem";
 
     // Initialize values
     export let data: LemmaItem;
     export let toggle_display: VoidFunction;
+    let new_konsep = {
+        id: null,
+        keterangan: "",
+        golongan_kata: "",
+        cakupans: [],
+        kata_asing: [],
+    } as KonsepItem;
     let old_data: LemmaItem;
+    let editable: boolean = true;
 
     onMount(() => {
         old_data = _.cloneDeep(data);
@@ -23,7 +32,15 @@
     // Event listeners
     // Callable
     async function submit_changes() {
+        console.log(old_data);
+        console.log(data);
         await invoke("submit_changes", { old: old_data, new: data });
+    }
+
+    function append_new_konsep() {
+        data.konseps.push(new_konsep);
+        data = data;
+        new_konsep = {} as KonsepItem;
     }
 
     async function delete_lemma() {
@@ -37,7 +54,9 @@
         });
     }
 
+    // TODO Fix cancel logic
     function cancel() {
+        console.log(old_data);
         data = _.cloneDeep(old_data);
     }
 </script>
@@ -50,8 +69,12 @@
                 submit={submit_changes}
                 toggle={toggle_display}
             />
-            <DisplayKonseps bind:konseps={data.konseps} />
-            <FormAppendKonsep bind:data />
+            <DisplayKonseps bind:konseps={data.konseps} {editable} />
+            <FormAppendKonsep
+                bind:konsep={new_konsep}
+                bind:index={data.konseps.length}
+                onSubmit={append_new_konsep}
+            />
         </div>
     </div>
     <div class="menu menu-vertical absolute -right-[6em] top-0 py-[1em]">

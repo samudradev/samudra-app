@@ -19,11 +19,24 @@ pub struct KonsepItem {
     pub cakupans: Vec<CakupanItem>,
     pub kata_asing: Vec<KataAsingItem>,
 }
+impl KonsepItem {
+    pub fn null() -> Self {
+        Self {
+            id: DbProvided::Unknown,
+            keterangan: "".into(),
+            golongan_kata: "".into(),
+            cakupans: vec![],
+            kata_asing: vec![],
+        }
+    }
+}
 
+/// This PartialEq trait is mainly used for testing purposes.
+/// Therefore, id comparison is ignored.
+/// To compare changes, use Diff trait.
 impl PartialEq for KonsepItem {
     fn eq(&self, other: &Self) -> bool {
-        self.id == other.id
-            && self.keterangan == other.keterangan
+        self.keterangan == other.keterangan
             && self.golongan_kata == other.golongan_kata
             // Necessary to ignore vector order
             && other
@@ -109,5 +122,12 @@ impl ToTableWithReference<sqlx::Sqlite> for KonsepItem {
         }
 
         Ok(konsep)
+    }
+    async fn detach_from(
+        self,
+        reference: &Self::REFERENCE,
+        pool: &sqlx::Pool<sqlx::Sqlite>,
+    ) -> Result<()> {
+        todo!()
     }
 }

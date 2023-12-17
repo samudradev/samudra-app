@@ -13,6 +13,15 @@ pub struct KataAsingItem {
     pub bahasa: String,
 }
 
+impl KataAsingItem {
+    pub fn null() -> Self {
+        KataAsingItem {
+            nama: "".into(),
+            bahasa: "".into(),
+        }
+    }
+}
+
 impl Item for KataAsingItem {
     type MAP = (); //PLACEHOLDER
 
@@ -72,23 +81,41 @@ impl ToTable<sqlx::Sqlite> for KataAsingItem {
 
 #[async_trait::async_trait]
 impl ToTableWithReference<sqlx::Sqlite> for KataAsingItem {
-    type OUTPUT = KataAsing;
+    type OUTPUT = ();
     type REFERENCE = KonsepItem;
 
     async fn insert_safe_with_reference(
         self,
         reference: &Self::REFERENCE,
         pool: &sqlx::Pool<sqlx::Sqlite>,
-    ) -> Result<KataAsing> {
-        let kata_asing = <Self as ToTable<sqlx::Sqlite>>::insert_safe(self, pool).await?;
+    ) -> Result<()> {
         let refer = reference.reference_field();
-        sqlx::query! {"INSERT or IGNORE INTO kata_asing_x_konsep (kata_asing_id, konsep_id) VALUES (?, ?)",
-            kata_asing.id,
+        sqlx::query! {"INSERT or IGNORE INTO kata_asing (nama, bahasa) VALUES (?,?)", self.nama, self.bahasa}.execute(pool).await.expect("Error inserting kata_asing");
+        sqlx::query! {"INSERT or IGNORE INTO kata_asing_x_konsep (kata_asing_id, konsep_id) VALUES ((SELECT id FROM  kata_asing WHERE kata_asing.nama = ? AND kata_asing.bahasa = ?), ?)",
+            self.nama,
+            self.bahasa,
             refer
         }
         .execute(pool)
         .await
         .expect("Error inserting cakupan_x_konsep");
-        Ok(kata_asing)
+        Ok(())
+    }
+    async fn detach_from(
+        self,
+        reference: &Self::REFERENCE,
+        pool: &sqlx::Pool<sqlx::Sqlite>,
+    ) -> Result<()> {
+        let refer = reference.reference_field();
+        sqlx::query! {
+            "DELETE FROM kata_asing_x_konsep AS kaxk WHERE kaxk.kata_asing_id = (SELECT id FROM  kata_asing WHERE kata_asing.nama = ? AND kata_asing.bahasa = ?) AND kaxk.konsep_id = ?",
+            self.nama,
+            self.bahasa,
+            refer
+        }
+        .execute(pool)
+        .await
+        .expect("Error detaching cakupan from konsep");
+        Ok(())
     }
 }

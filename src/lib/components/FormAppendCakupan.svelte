@@ -17,10 +17,7 @@
     }
 </script>
 
-<div class="label">
-    <span class="label-text-alt">Cakupan</span>
-</div>
-<DisplayCakupans bind:cakupans />
+<DisplayCakupans bind:cakupans editable={true} label={true} />
 <form on:submit|preventDefault={append_new_cakupan} class="w-full">
     <span class="join w-full">
         <input

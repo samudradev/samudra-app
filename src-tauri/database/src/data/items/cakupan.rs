@@ -9,6 +9,12 @@ use crate::models::cakupan::{Cakupan, InsertCakupan};
 ))]
 pub struct CakupanItem(String);
 
+impl CakupanItem {
+    pub fn null() -> Self {
+        CakupanItem("".into())
+    }
+}
+
 impl Item for CakupanItem {
     type MAP = (); //PLACEHOLDER;
 
@@ -19,7 +25,7 @@ impl Item for CakupanItem {
     }
 
     fn from_views(value: &Vec<Self::VIEW>) -> Vec<Self> {
-        dbg!(value)
+        value
             .clone()
             .into_iter()
             .filter(|a| a.cakupan.is_some())
@@ -64,23 +70,42 @@ impl ToTable<sqlx::Sqlite> for CakupanItem {
 
 #[async_trait::async_trait]
 impl ToTableWithReference<sqlx::Sqlite> for CakupanItem {
-    type OUTPUT = Cakupan;
+    type OUTPUT = ();
     type REFERENCE = KonsepItem;
 
     async fn insert_safe_with_reference(
         self,
         reference: &Self::REFERENCE,
         pool: &sqlx::Pool<sqlx::Sqlite>,
-    ) -> Result<Cakupan> {
-        let cakupan = <Self as ToTable<sqlx::Sqlite>>::insert_safe(self, pool).await?;
+    ) -> Result<()> {
         let refer = reference.reference_field();
-        sqlx::query! {"INSERT or IGNORE INTO cakupan_x_konsep (cakupan_id, konsep_id) VALUES (?, ?)",
-            cakupan.id,
+        sqlx::query! {"INSERT or IGNORE INTO cakupan (nama) VALUES (?)", self.0}
+            .execute(pool)
+            .await
+            .expect("Error inserting cakupan");
+        sqlx::query! {"INSERT or IGNORE INTO cakupan_x_konsep (cakupan_id, konsep_id) VALUES ((SELECT id FROM cakupan WHERE cakupan.nama = ?), ?)",
+        self.0,
+        refer
+    }
+    .execute(pool)
+    .await
+    .expect("Error inserting cakupan_x_konsep");
+        Ok(())
+    }
+    async fn detach_from(
+        self,
+        reference: &Self::REFERENCE,
+        pool: &sqlx::Pool<sqlx::Sqlite>,
+    ) -> Result<()> {
+        let refer = reference.reference_field();
+        sqlx::query! {
+            "DELETE FROM cakupan_x_konsep AS cxk WHERE cxk.cakupan_id = (SELECT id FROM  cakupan WHERE cakupan.nama = ?) AND cxk.konsep_id = ?",
+            self.0,
             refer
         }
         .execute(pool)
         .await
-        .expect("Error inserting cakupan_x_konsep");
-        Ok(cakupan)
+        .expect("Error detaching cakupan from konsep");
+        Ok(())
     }
 }

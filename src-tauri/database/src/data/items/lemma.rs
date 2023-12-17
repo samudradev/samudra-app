@@ -2,7 +2,7 @@ use crate::{data::CakupanItem, prelude::*};
 
 use std::collections::HashMap;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, diff::Diff, ts_rs::TS)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, diff::Diff, ts_rs::TS)]
 #[ts(export, export_to = "../../src/bindings/")]
 #[diff(attr(
     #[derive(Debug)]
@@ -11,6 +11,22 @@ pub struct LemmaItem {
     pub id: DbProvided<i64>,
     pub lemma: String,
     pub konseps: Vec<KonsepItem>,
+}
+
+/// This PartialEq trait is mainly used for testing purposes.
+/// Therefore, id comparison is ignored.
+/// To compare changes, use Diff trait.
+impl PartialEq for LemmaItem {
+    fn eq(&self, other: &Self) -> bool {
+        self.lemma == other.lemma
+            && other
+                .konseps
+                .iter()
+                .filter(|a| !self.konseps.contains(a))
+                .collect_vec()
+                .len()
+                == 0
+    }
 }
 impl ReferenceItem for LemmaItem {
     type FIELD = i64;

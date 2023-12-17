@@ -1,5 +1,6 @@
 <script lang="ts">
     // APIs
+    import { onMount } from "svelte";
     // Components
     import FormAppendCakupan from "./FormAppendCakupan.svelte";
     import FormAppendKataAsing from "./FormAppendKataAsing.svelte";
@@ -7,39 +8,52 @@
     // Stores
     // Types
     import type { KonsepItem } from "../../bindings/KonsepItem";
-    import type { LemmaItem } from "../../bindings/LemmaItem";
     import type { KataAsingItem } from "../../bindings/KataAsingItem";
 
     // Initialize values
-    export let data: LemmaItem;
+    export let konsep: KonsepItem;
+    export let onSubmit: VoidFunction = () => {};
+    export let index: number = 0;
     $: cakupan_list = [] as string[];
     $: kata_asing_list = [] as KataAsingItem[];
     let keterangan_item: string;
     let golongan_kata_item: string;
+
+    onMount(() => {
+        if (konsep != null && konsep != undefined) {
+            keterangan_item = konsep.keterangan;
+            golongan_kata_item = konsep.golongan_kata;
+            cakupan_list = konsep.cakupans;
+            kata_asing_list = konsep.kata_asing;
+        }
+    });
     // Event listeners
     // Callables
-    function append_new_konsep() {
-        data.konseps.push(
-            Object.assign({} as KonsepItem, {
-                id: null,
-                keterangan: keterangan_item,
-                golongan_kata: golongan_kata_item,
-                cakupans: cakupan_list,
-                kata_asing: kata_asing_list,
-            }),
-        );
-        data = data; // To force reload
+    function save_new_konsep() {
+        konsep = {
+            id: null,
+            keterangan: keterangan_item,
+            golongan_kata: golongan_kata_item,
+            cakupans: cakupan_list,
+            kata_asing: kata_asing_list,
+        };
         cakupan_list = [];
         kata_asing_list = [];
         keterangan_item = "";
     }
+    console.log(cakupan_list);
 </script>
 
 <div class="indicator w-full mt-4">
     <div
         class="text-left card-bordered border-primary border-2 rounded-lg w-full"
     >
-        <form on:submit|preventDefault={append_new_konsep} class="space-y-4">
+        <form
+            on:submit|preventDefault={save_new_konsep}
+            on:submit|preventDefault={onSubmit}
+            class="space-y-4"
+        >
+            {index + 1}.
             <SelectGolonganKata bind:golongan_kata={golongan_kata_item} />
             <button type="submit" class="text-right indicator-item btn-primary"
                 >+</button

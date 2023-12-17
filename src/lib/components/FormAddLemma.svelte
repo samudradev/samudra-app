@@ -12,14 +12,16 @@
     // Callables
 </script>
 
-<form class="join">
+<form
+    class="join"
+    on:submit|preventDefault={submit}
+    on:submit|preventDefault={toggle}
+>
     <input
         type="text"
         bind:value={lemma}
         class="input input-bordered w-full join-item"
         required
     />
-    <button class="btn-primary join-item" on:click={submit} on:click={toggle}>
-        Save
-    </button>
+    <button type="submit" class="btn-primary join-item"> Save </button>
 </form>

@@ -18,10 +18,7 @@
     }
 </script>
 
-<div class="label">
-    <span class="label-text-alt">Kata asing</span>
-</div>
-<DisplayKataAsings bind:kata_asings />
+<DisplayKataAsings bind:kata_asings editable={true} label={true} />
 <form
     on:submit|preventDefault={append_new_kata_asing}
     class="form-control w-full"
