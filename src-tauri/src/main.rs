@@ -20,8 +20,8 @@ use database;
 use database::data::{Item, LemmaItem};
 use database::operations::DiffSumbittable;
 
-// TODO FEAT Share picture
-// TODO Manage errors gracefully
+// TODO: FEAT Share picture
+// TODO: Manage errors gracefully
 
 /// Exposes the active database URL to the frontend.
 #[tauri::command(async)]
@@ -173,7 +173,7 @@ async fn submit_changes(
     new: LemmaItem,
 ) -> Result<(), String> {
     let db = config.connection().await.pool;
-    old.submit_changes(&new, &db).await.unwrap();
+    old.submit_changes(dbg!(&new), &db).await.unwrap();
     Ok(())
 }
 

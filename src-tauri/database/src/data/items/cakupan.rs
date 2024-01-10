@@ -1,13 +1,17 @@
-use crate::data::Item;
+use crate::io::interface::{AttachmentItemMod, FromView, Item, ItemMod, SubmitItem};
 use crate::prelude::*;
+use crate::states::{Pool, Sqlite};
 
-use crate::models::cakupan::{Cakupan, InsertCakupan};
-
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, diff::Diff, Hash, Eq)]
-#[diff(attr(
-    #[derive(Debug)]
-))]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, Hash, Eq)]
 pub struct CakupanItem(String);
+
+impl ItemMod for CakupanItem {
+    type FromItem = CakupanItem;
+
+    fn from_item(value: &Self::FromItem) -> Self {
+        value.clone()
+    }
+}
 
 impl CakupanItem {
     pub fn null() -> Self {
@@ -16,13 +20,19 @@ impl CakupanItem {
 }
 
 impl Item for CakupanItem {
-    type MAP = (); //PLACEHOLDER;
+    type IntoMod = CakupanItem;
 
-    type VIEW = LemmaWithKonsepView;
-
-    fn from_hashmap(_value: &Self::MAP) -> Vec<Self> {
-        todo!()
+    fn modify_into(&self, other: &Self) -> Result<Self::IntoMod> {
+        Ok(other.clone())
     }
+
+    fn partial_from_mod(other: &Self::IntoMod) -> Self {
+        CakupanItem(other.0.clone())
+    }
+}
+
+impl FromView for CakupanItem {
+    type VIEW = LemmaWithKonsepView;
 
     fn from_views(value: &Vec<Self::VIEW>) -> Vec<Self> {
         value
@@ -46,66 +56,69 @@ impl From<String> for CakupanItem {
         Self(value)
     }
 }
-#[async_trait::async_trait]
-impl ToTable<sqlx::Sqlite> for CakupanItem {
-    type OUTPUT = Cakupan;
 
-    async fn insert_safe(self, pool: &sqlx::Pool<sqlx::Sqlite>) -> Result<Cakupan> {
-        match Cakupan::select()
-            .where_bind("nama = ?", &self.0)
-            .fetch_optional(pool)
-            .await?
-        {
-            Some(c) => Ok(c),
-            None => InsertCakupan {
-                nama: self.0.clone(),
-                keterangan: None,
-            }
-            .insert(pool)
-            .await
-            .map_err(BackendError::from),
+#[async_trait::async_trait]
+impl SubmitItem<sqlx::Sqlite> for CakupanItem {
+    async fn submit_full(&self, pool: &sqlx::Pool<sqlx::Sqlite>) -> sqlx::Result<()> {
+        sqlx::query! {
+            r#"INSERT or IGNORE INTO cakupan (nama) VALUES (?)"#,
+            self.0
         }
+        .execute(pool)
+        .await?;
+        Ok(())
+    }
+
+    async fn submit_partial(&self, pool: &Pool<Sqlite>) -> sqlx::Result<()> {
+        todo!()
     }
 }
 
 #[async_trait::async_trait]
-impl ToTableWithReference<sqlx::Sqlite> for CakupanItem {
-    type OUTPUT = ();
-    type REFERENCE = KonsepItem;
-
-    async fn insert_safe_with_reference(
-        self,
-        reference: &Self::REFERENCE,
+impl AttachmentItemMod<KonsepItem, sqlx::Sqlite> for CakupanItem {
+    async fn submit_attachment_to(
+        &self,
+        parent: &KonsepItem,
         pool: &sqlx::Pool<sqlx::Sqlite>,
-    ) -> Result<()> {
-        let refer = reference.reference_field();
-        sqlx::query! {"INSERT or IGNORE INTO cakupan (nama) VALUES (?)", self.0}
-            .execute(pool)
-            .await
-            .expect("Error inserting cakupan");
-        sqlx::query! {"INSERT or IGNORE INTO cakupan_x_konsep (cakupan_id, konsep_id) VALUES ((SELECT id FROM cakupan WHERE cakupan.nama = ?), ?)",
-        self.0,
-        refer
-    }
-    .execute(pool)
-    .await
-    .expect("Error inserting cakupan_x_konsep");
+    ) -> sqlx::Result<()> {
+        sqlx::query! {
+                r#" INSERT or IGNORE INTO cakupan (nama) VALUES (?);
+                INSERT or IGNORE INTO cakupan_x_konsep (cakupan_id, konsep_id) 
+                    VALUES (
+                        (SELECT id FROM cakupan WHERE cakupan.nama = ?), 
+                        (SELECT id FROM konsep WHERE konsep.keterangan = ?)
+                    );"#,
+            self.0,
+            self.0,
+            parent.keterangan
+        }
+        .execute(pool)
+        .await
+        .expect("Error attaching cakupan to konsep");
         Ok(())
     }
-    async fn detach_from(
-        self,
-        reference: &Self::REFERENCE,
+    async fn submit_detachment_from(
+        &self,
+        parent: &KonsepItem,
         pool: &sqlx::Pool<sqlx::Sqlite>,
-    ) -> Result<()> {
-        let refer = reference.reference_field();
+    ) -> sqlx::Result<()> {
         sqlx::query! {
-            "DELETE FROM cakupan_x_konsep AS cxk WHERE cxk.cakupan_id = (SELECT id FROM  cakupan WHERE cakupan.nama = ?) AND cxk.konsep_id = ?",
+            r#" DELETE FROM cakupan_x_konsep AS cxk
+                WHERE (
+                    cxk.cakupan_id = (SELECT id FROM cakupan WHERE cakupan.nama = ?) 
+                        AND 
+                    cxk.konsep_id = (SELECT id FROM konsep WHERE konsep.keterangan = ?)
+                );"#,
             self.0,
-            refer
+            parent.keterangan
         }
         .execute(pool)
         .await
         .expect("Error detaching cakupan from konsep");
         Ok(())
+    }
+
+    async fn submit_modification_with(&self, parent: &KonsepItem, pool: &Pool<Sqlite>) -> sqlx::Result<()> {
+        todo!()
     }
 }

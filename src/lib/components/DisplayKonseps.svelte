@@ -20,6 +20,8 @@
     }
 
     function update_value_at(konsep: KonsepItem, index: number) {
+        console.log(konsep);
+        console.log(index);
         konseps.splice(index, 1, konsep);
         konseps = konseps;
         edit_at = -1;

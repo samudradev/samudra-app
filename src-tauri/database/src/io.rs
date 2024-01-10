@@ -1,4 +1,4 @@
-// #![allow(dead_code)]
+pub(crate) mod interface;
 
 // use crate::data::LemmaItem;
 // use crate::insertions::ToTable;

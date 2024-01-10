@@ -1,5 +1,6 @@
 use crate::errors::Result;
 
+#[deprecated]
 #[async_trait::async_trait]
 pub trait ToTable<DB: sqlx::Database> {
     type OUTPUT: ormlite::Model<DB> + Sized + Send + Sync;
@@ -7,10 +8,10 @@ pub trait ToTable<DB: sqlx::Database> {
     /// Insert values while checking for duplicates
     async fn insert_safe(self, pool: &sqlx::Pool<DB>) -> Result<Self::OUTPUT>;
 
-    async fn remove(&self, _pool: &sqlx::Pool<DB>) -> Result<()> {
-        todo!("LOW PRIORITY Default implementation of ToTable")
-    }
+    async fn remove(&self, _pool: &sqlx::Pool<DB>) -> Result<()>;
 }
+
+#[deprecated]
 #[async_trait::async_trait]
 pub trait ToTableWithReference<DB: sqlx::Database> {
     type OUTPUT;
@@ -25,6 +26,8 @@ pub trait ToTableWithReference<DB: sqlx::Database> {
 
     async fn detach_from(self, reference: &Self::REFERENCE, pool: &sqlx::Pool<DB>) -> Result<()>;
 }
+
+#[deprecated]
 pub trait ReferenceItem {
     type FIELD;
     fn reference_field(&self) -> Self::FIELD;
