@@ -1,6 +1,6 @@
 [package]
 name = "database"
-version = "0.3.3"
+version = "0.4.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -9,9 +9,7 @@ edition = "2021"
 async-trait = "0.1.74"
 chrono = { version = "0.4.26", features = ["serde"] }
 csv = "1.2.2"
-diff-struct = "0.5.3"
 itertools = "0.11.0"
-ormlite = { version = "0.17.3", features = ["sqlite"] }
 serde = { version = "1.0.173", features = ["derive"] }
 serde_json = "1.0.108"
 sqlx = { version = "0.7.2", features = [
