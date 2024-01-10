@@ -68,15 +68,7 @@ impl SubmitMod<sqlx::Sqlite> for LemmaItemMod {
     async fn submit_mod(&self, pool: &Pool<Sqlite>) -> sqlx::Result<()> {
         let item = LemmaItem::partial_from_mod(self);
         item.submit_partial(pool).await?;
-        for attached in self.konseps.attached.iter() {
-            attached.submit_attachment_to(&item, pool).await?;
-        };
-        for detached in self.konseps.detached.iter() {
-            detached.submit_detachment_from(&item, pool).await?;
-        };
-        for modified in self.konseps.modified.iter() {
-            modified.submit_modification_with(&item, pool).await?;
-        };
+        self.konseps.submit_changes_with(&item, pool).await?;
         Ok(())
     }
 }

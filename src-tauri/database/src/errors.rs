@@ -43,13 +43,6 @@ impl From<sqlx::Error> for BackendError {
         }
     }
 }
-impl From<ormlite::Error> for BackendError {
-    fn from(value: ormlite::Error) -> Self {
-        BackendError {
-            message: value.to_string(),
-        }
-    }
-}
 impl From<csv::Error> for BackendError {
     fn from(value: csv::Error) -> Self {
         BackendError {

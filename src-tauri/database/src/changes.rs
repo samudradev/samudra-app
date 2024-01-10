@@ -4,7 +4,7 @@ use crate::{
     data::{CakupanItem, KonsepItemMod, LemmaItem},
     prelude::{AutoGen, KataAsingItem, KonsepItem},
 };
-use crate::io::interface::{Item, ItemMod};
+use crate::io::interface::{AttachmentItemMod, Item, ItemMod};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum FieldMod<T> {
@@ -36,6 +36,21 @@ pub struct AttachmentMod<A: ItemMod> {
     pub attached: Vec<A>,
     pub detached: Vec<A>,
     pub modified: Vec<A>,
+}
+
+impl<A> AttachmentMod<A> where A: ItemMod {
+    pub async fn submit_changes_with<P>(&self, parent: &P, pool: &sqlx::Pool<sqlx::Sqlite>) -> sqlx::Result<()> where A: ItemMod + AttachmentItemMod<P, sqlx::Sqlite>, P: Item {
+        for attached in self.attached.iter() {
+            attached.submit_attachment_to(&parent, pool).await?;
+        };
+        for detached in self.detached.iter() {
+            detached.submit_detachment_from(&parent, pool).await?;
+        };
+        for modified in self.modified.iter() {
+            modified.submit_modification_with(&parent, pool).await?;
+        };
+        Ok(())
+    }
 }
 
 impl<A: ItemMod, I: Item<IntoMod=A>> From<Vec<I>> for AttachmentMod<A> {
