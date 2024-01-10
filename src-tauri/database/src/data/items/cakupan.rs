@@ -118,7 +118,11 @@ impl AttachmentItemMod<KonsepItem, sqlx::Sqlite> for CakupanItem {
         Ok(())
     }
 
-    async fn submit_modification_with(&self, parent: &KonsepItem, pool: &Pool<Sqlite>) -> sqlx::Result<()> {
+    async fn submit_modification_with(
+        &self,
+        parent: &KonsepItem,
+        pool: &Pool<Sqlite>,
+    ) -> sqlx::Result<()> {
         todo!()
     }
 }

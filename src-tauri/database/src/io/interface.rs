@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use crate::errors::BackendError;
+use std::collections::HashMap;
 
 pub(crate) trait View {}
 
@@ -26,7 +26,6 @@ pub(crate) trait Item: Sized {
     /// Instantiates a new struct with no attachment.
 
     fn partial_from_mod(other: &Self::IntoMod) -> Self;
-
 }
 
 #[async_trait::async_trait]
@@ -36,9 +35,8 @@ pub(crate) trait SubmitItem<DB: sqlx::Database>: Item {
     async fn submit_partial(&self, pool: &sqlx::Pool<DB>) -> sqlx::Result<()>;
 }
 
-
 pub(crate) trait ItemMod {
-    type FromItem: Item<IntoMod=Self>;
+    type FromItem: Item<IntoMod = Self>;
     fn from_item(value: &Self::FromItem) -> Self;
 }
 
@@ -66,5 +64,6 @@ pub(crate) trait AttachmentItemMod<P: Item, DB: sqlx::Database>: ItemMod {
     //     }
     //     Ok(())
     // }
-    async fn submit_modification_with(&self, parent: &P, pool: &sqlx::Pool<DB>) -> sqlx::Result<()>;
+    async fn submit_modification_with(&self, parent: &P, pool: &sqlx::Pool<DB>)
+        -> sqlx::Result<()>;
 }

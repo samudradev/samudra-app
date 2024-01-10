@@ -1,10 +1,10 @@
 use itertools::Itertools;
 
+use crate::io::interface::{AttachmentItemMod, Item, ItemMod};
 use crate::{
     data::{CakupanItem, KonsepItemMod, LemmaItem},
     prelude::{AutoGen, KataAsingItem, KonsepItem},
 };
-use crate::io::interface::{AttachmentItemMod, Item, ItemMod};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum FieldMod<T> {
@@ -38,22 +38,33 @@ pub struct AttachmentMod<A: ItemMod> {
     pub modified: Vec<A>,
 }
 
-impl<A> AttachmentMod<A> where A: ItemMod {
-    pub async fn submit_changes_with<P>(&self, parent: &P, pool: &sqlx::Pool<sqlx::Sqlite>) -> sqlx::Result<()> where A: ItemMod + AttachmentItemMod<P, sqlx::Sqlite>, P: Item {
+impl<A> AttachmentMod<A>
+where
+    A: ItemMod,
+{
+    pub async fn submit_changes_with<P>(
+        &self,
+        parent: &P,
+        pool: &sqlx::Pool<sqlx::Sqlite>,
+    ) -> sqlx::Result<()>
+    where
+        A: ItemMod + AttachmentItemMod<P, sqlx::Sqlite>,
+        P: Item,
+    {
         for attached in self.attached.iter() {
             attached.submit_attachment_to(&parent, pool).await?;
-        };
+        }
         for detached in self.detached.iter() {
             detached.submit_detachment_from(&parent, pool).await?;
-        };
+        }
         for modified in self.modified.iter() {
             modified.submit_modification_with(&parent, pool).await?;
-        };
+        }
         Ok(())
     }
 }
 
-impl<A: ItemMod, I: Item<IntoMod=A>> From<Vec<I>> for AttachmentMod<A> {
+impl<A: ItemMod, I: Item<IntoMod = A>> From<Vec<I>> for AttachmentMod<A> {
     fn from(value: Vec<I>) -> Self {
         AttachmentMod {
             attached: Vec::from_iter(value.iter().map(|item| item.modify_into(&item).unwrap())),
@@ -63,7 +74,7 @@ impl<A: ItemMod, I: Item<IntoMod=A>> From<Vec<I>> for AttachmentMod<A> {
     }
 }
 
-pub trait CompareAttachable<I: PartialEq + Clone + Item<IntoMod=A>, A: ItemMod<FromItem=I>> {
+pub trait CompareAttachable<I: PartialEq + Clone + Item<IntoMod = A>, A: ItemMod<FromItem = I>> {
     fn items(&self) -> Vec<I>;
 
     fn find_attached(&self, other: &Vec<I>) -> Vec<A> {
@@ -130,7 +141,11 @@ impl CompareAttachable<KonsepItem, KonsepItemMod> for LemmaItem {
             .collect_vec()
     }
     fn find_modified(&self, other: &Vec<KonsepItem>) -> Vec<KonsepItemMod> {
-        let detached = self.find_detached(other).iter().map(|item| KonsepItem::partial_from_mod(item)).collect_vec();
+        let detached = self
+            .find_detached(other)
+            .iter()
+            .map(|item| KonsepItem::partial_from_mod(item))
+            .collect_vec();
         let old = Vec::clone(&self.items())
             .into_iter()
             .filter(|item| !detached.contains(item))
@@ -152,10 +167,12 @@ impl CompareAttachable<KonsepItem, KonsepItemMod> for LemmaItem {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::views::LemmaWithKonsepView;
     use crate::io::interface::{FromView, SubmitMod};
+    use crate::views::LemmaWithKonsepView;
+    use tracing_test::traced_test;
 
     #[sqlx::test(fixtures("lemma"))]
+    #[traced_test]
     fn test_diff_handling(pool: sqlx::Pool<sqlx::Sqlite>) -> Result<(), sqlx::Error> {
         let view = LemmaWithKonsepView::query_all(&pool).await?;
         let data = LemmaItem::from_views(&view);
@@ -194,7 +211,9 @@ mod test {
         Ok(())
     }
     #[sqlx::test(fixtures("lemma"))]
-    fn test_diff_handling_detach_cakupan(pool: sqlx::Pool<sqlx::Sqlite>) -> Result<(), sqlx::Error> {
+    fn test_diff_handling_detach_cakupan(
+        pool: sqlx::Pool<sqlx::Sqlite>,
+    ) -> Result<(), sqlx::Error> {
         let view = LemmaWithKonsepView::query_all(&pool).await?;
         let data = LemmaItem::from_views(&view);
         let old = data
@@ -231,7 +250,9 @@ mod test {
         Ok(())
     }
     #[sqlx::test(fixtures("lemma"))]
-    fn test_diff_handling_detach_kata_asing(pool: sqlx::Pool<sqlx::Sqlite>) -> Result<(), sqlx::Error> {
+    fn test_diff_handling_detach_kata_asing(
+        pool: sqlx::Pool<sqlx::Sqlite>,
+    ) -> Result<(), sqlx::Error> {
         let view = LemmaWithKonsepView::query_all(&pool).await?;
         let data = LemmaItem::from_views(&view);
         let old = data
@@ -257,7 +278,9 @@ mod test {
         Ok(())
     }
     #[sqlx::test(fixtures("lemma_w_2_konseps"))]
-    fn test_diff_handling_attach_cakupan(pool: sqlx::Pool<sqlx::Sqlite>) -> Result<(), sqlx::Error> {
+    fn test_diff_handling_attach_cakupan(
+        pool: sqlx::Pool<sqlx::Sqlite>,
+    ) -> Result<(), sqlx::Error> {
         let view = LemmaWithKonsepView::query_all(&pool).await?;
         let data = LemmaItem::from_views(&view);
         let old = data
@@ -314,8 +337,7 @@ mod test {
                 modified: vec![]
             }
         );
-        let changes_kata_asing: AttachmentMod<KataAsingItem> =
-            old.compare_attachment(vec![]);
+        let changes_kata_asing: AttachmentMod<KataAsingItem> = old.compare_attachment(vec![]);
         assert_eq!(
             changes_kata_asing,
             AttachmentMod {

@@ -1,7 +1,7 @@
-use std::collections::HashMap;
 use crate::changes::{AttachmentMod, CompareAttachable, FieldMod};
 use crate::io::interface::{AttachmentItemMod, FromView, FromViewMap, Item, ItemMod};
 use crate::prelude::*;
+use std::collections::HashMap;
 
 use crate::data::items::cakupan::CakupanItem;
 use crate::data::items::lemma::LemmaItem;
@@ -178,7 +178,11 @@ impl AttachmentItemMod<LemmaItem, sqlx::Sqlite> for KonsepItemMod {
         todo!()
     }
 
-    async fn submit_modification_with(&self, parent: &LemmaItem, pool: &Pool<Sqlite>) -> sqlx::Result<()> {
+    async fn submit_modification_with(
+        &self,
+        parent: &LemmaItem,
+        pool: &Pool<Sqlite>,
+    ) -> sqlx::Result<()> {
         let konsep = KonsepItem::partial_from_mod(self);
         sqlx::query! {
             r#" UPDATE konsep
@@ -215,7 +219,6 @@ impl AttachmentItemMod<LemmaItem, sqlx::Sqlite> for KonsepItemMod {
             kata_asing.submit_modification_with(&konsep, pool).await?;
         }
         Ok(())
-
     }
 }
 
@@ -227,12 +230,17 @@ impl Item for KonsepItem {
     type IntoMod = KonsepItemMod;
     fn modify_into(&self, other: &Self) -> Result<Self::IntoMod> {
         if self.id != other.id {
-            return Err(BackendError{ message: String::from("ID Assertion error") })
+            return Err(BackendError {
+                message: String::from("ID Assertion error"),
+            });
         }
-        Ok(KonsepItemMod{
+        Ok(KonsepItemMod {
             id: self.id.clone(),
             keterangan: FieldMod::compare(self.keterangan.clone(), other.keterangan.clone()),
-            golongan_kata: FieldMod::compare(self.golongan_kata.clone(), other.golongan_kata.clone()),
+            golongan_kata: FieldMod::compare(
+                self.golongan_kata.clone(),
+                other.golongan_kata.clone(),
+            ),
             cakupans: self.compare_attachment(other.cakupans.clone()),
             kata_asing: self.compare_attachment(other.kata_asing.clone()),
         })

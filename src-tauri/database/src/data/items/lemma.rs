@@ -1,13 +1,15 @@
 use crate::{
     changes::{AttachmentMod, CompareAttachable, FieldMod},
-    data::{ KonsepItemMod},
-    io::interface::{AttachmentItemMod, FromView, FromViewMap, IntoViewMap, Item, SubmitItem, ItemMod},
+    data::KonsepItemMod,
+    io::interface::{
+        AttachmentItemMod, FromView, FromViewMap, IntoViewMap, Item, ItemMod, SubmitItem,
+    },
     prelude::*,
 };
 
-use std::collections::HashMap;
 use crate::io::interface::SubmitMod;
 use crate::states::{Pool, Sqlite};
+use std::collections::HashMap;
 
 use super::konsep::KonsepHashMap;
 
@@ -92,9 +94,11 @@ impl PartialEq for LemmaItem {
 #[async_trait::async_trait]
 impl SubmitItem<sqlx::Sqlite> for LemmaItem {
     async fn submit_full(&self, pool: &sqlx::Pool<sqlx::Sqlite>) -> sqlx::Result<()> {
-        let _=self.submit_partial(pool).await?;
+        let _ = self.submit_partial(pool).await?;
         for konsep in self.konseps.iter() {
-            KonsepItemMod::from_item(konsep).submit_attachment_to(self, pool).await?;
+            KonsepItemMod::from_item(konsep)
+                .submit_attachment_to(self, pool)
+                .await?;
         }
         Ok(())
     }
@@ -109,7 +113,6 @@ impl SubmitItem<sqlx::Sqlite> for LemmaItem {
         Ok(())
     }
 }
-
 
 impl FromViewMap for LemmaItem {
     type KEY = (i64, String);
