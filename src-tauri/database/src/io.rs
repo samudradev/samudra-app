@@ -1,4 +1,4 @@
-pub(crate) mod interface;
+pub mod interface;
 
 // use crate::data::LemmaItem;
 // use crate::insertions::ToTable;

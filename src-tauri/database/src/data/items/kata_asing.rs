@@ -82,6 +82,14 @@ impl SubmitItem<sqlx::Sqlite> for KataAsingItem {
     async fn submit_partial(&self, pool: &Pool<Sqlite>) -> sqlx::Result<()> {
         self.submit_full(pool).await
     }
+
+    async fn submit_full_removal(&self, pool: &Pool<Sqlite>) -> sqlx::Result<()> {
+        todo!()
+    }
+
+    async fn submit_partial_removal(&self, pool: &Pool<Sqlite>) -> sqlx::Result<()> {
+        todo!()
+    }
 }
 
 #[async_trait::async_trait]

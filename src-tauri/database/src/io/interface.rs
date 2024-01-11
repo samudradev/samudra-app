@@ -1,25 +1,25 @@
 use crate::errors::BackendError;
 use std::collections::HashMap;
 
-pub(crate) trait View {}
+pub trait View {}
 
-pub(crate) trait FromView: Item {
+pub trait FromView: Item {
     type VIEW: View;
     fn from_views(views: &Vec<Self::VIEW>) -> Vec<Self>;
 }
 
-pub(crate) trait FromViewMap: Item {
+pub trait FromViewMap: Item {
     type KEY;
     type VALUE;
     fn from_viewmap(value: &HashMap<Self::KEY, Self::VALUE>) -> Vec<Self>;
 }
-pub(crate) trait IntoViewMap<V: View>: IntoIterator<Item = V> {
+pub trait IntoViewMap<V: View>: IntoIterator<Item = V> {
     type KEY;
     type VALUE;
     fn into_viewmap(self) -> HashMap<Self::KEY, Self::VALUE>;
 }
 
-pub(crate) trait Item: Sized {
+pub trait Item: Sized {
     type IntoMod: ItemMod;
     fn modify_into(&self, other: &Self) -> Result<Self::IntoMod, BackendError>;
 
@@ -29,23 +29,26 @@ pub(crate) trait Item: Sized {
 }
 
 #[async_trait::async_trait]
-pub(crate) trait SubmitItem<DB: sqlx::Database>: Item {
+pub trait SubmitItem<DB: sqlx::Database>: Item {
     async fn submit_full(&self, pool: &sqlx::Pool<DB>) -> sqlx::Result<()>;
 
     async fn submit_partial(&self, pool: &sqlx::Pool<DB>) -> sqlx::Result<()>;
+
+    async fn submit_full_removal(&self, pool: &sqlx::Pool<DB>) -> sqlx::Result<()>;
+    async fn submit_partial_removal(&self, pool: &sqlx::Pool<DB>) -> sqlx::Result<()>;
 }
 
-pub(crate) trait ItemMod {
+pub trait ItemMod {
     type FromItem: Item<IntoMod = Self>;
     fn from_item(value: &Self::FromItem) -> Self;
 }
 
 #[async_trait::async_trait]
-pub(crate) trait SubmitMod<DB: sqlx::Database>: ItemMod {
+pub trait SubmitMod<DB: sqlx::Database>: ItemMod {
     async fn submit_mod(&self, pool: &sqlx::Pool<DB>) -> sqlx::Result<()>;
 }
 #[async_trait::async_trait]
-pub(crate) trait AttachmentItemMod<P: Item, DB: sqlx::Database>: ItemMod {
+pub trait AttachmentItemMod<P: Item, DB: sqlx::Database>: ItemMod {
     async fn submit_attachment_to(&self, parent: &P, pool: &sqlx::Pool<DB>) -> sqlx::Result<()>;
 
     // TODO: Solve this

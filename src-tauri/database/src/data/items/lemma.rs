@@ -116,6 +116,14 @@ impl SubmitItem<sqlx::Sqlite> for LemmaItem {
         .await?;
         Ok(())
     }
+
+    async fn submit_full_removal(&self, pool: &Pool<Sqlite>) -> sqlx::Result<()> {
+        todo!()
+    }
+
+    async fn submit_partial_removal(&self, pool: &Pool<Sqlite>) -> sqlx::Result<()> {
+        todo!()
+    }
 }
 
 impl FromViewMap for LemmaItem {
