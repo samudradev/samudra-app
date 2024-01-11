@@ -9,11 +9,17 @@ use crate::io::interface::{IntoViewMap, View};
 /// A [View] whose query joins konsep to its tags (cakupan, kata_asing)
 ///
 /// Running this command:
-/// ```
+/// ```no_run
+/// # use database::views::LemmaWithKonsepView;
+/// #
+/// # tokio_test::block_on(async {
 /// # let pool_url = ":memory:";
-/// let pool = sqlx::SqlitePool::connect(pool_url);
-/// let lemma_views: Vec<LemmaWithKonsepView> = LemmaWithKonsepView::query_all("lemma_1",
-/// pool).await?
+/// let pool = sqlx::SqlitePool::connect(pool_url).await.expect("Connection error");
+/// let lemma_views: Vec<LemmaWithKonsepView> = LemmaWithKonsepView::query_lemma(
+///         "lemma_1".to_string(),
+///          &pool
+///     ).await.expect("Query error");
+/// # });
 /// ```
 /// will bind "lemma_1" to following query and calls it:
 ///```sql
