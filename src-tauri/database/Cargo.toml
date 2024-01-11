@@ -20,5 +20,8 @@ sqlx = { version = "0.7.2", features = [
     "migrate",
 ] }
 tracing = "0.1.40"
-tracing-test = "0.2.4"
 ts-rs = "6.2.1"
+
+[dev-dependencies]
+tokio-test = "0.4.3"
+tracing-test = "0.2.4"
