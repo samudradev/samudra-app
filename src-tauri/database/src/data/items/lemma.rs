@@ -10,6 +10,7 @@ use crate::{
 use crate::io::interface::SubmitMod;
 use crate::states::{Pool, Sqlite};
 use std::collections::HashMap;
+use tracing::instrument;
 
 use super::konsep::KonsepHashMap;
 
@@ -67,8 +68,10 @@ impl ItemMod for LemmaItemMod {
 
 #[async_trait::async_trait]
 impl SubmitMod<sqlx::Sqlite> for LemmaItemMod {
+    #[instrument(skip_all)]
     async fn submit_mod(&self, pool: &Pool<Sqlite>) -> sqlx::Result<()> {
         let item = LemmaItem::partial_from_mod(self);
+        tracing::trace!("Submitting <{}:{}>", item.id, item.lemma);
         item.submit_partial(pool).await?;
         self.konseps.submit_changes_with(&item, pool).await?;
         Ok(())
@@ -105,7 +108,8 @@ impl SubmitItem<sqlx::Sqlite> for LemmaItem {
 
     async fn submit_partial(&self, pool: &Pool<Sqlite>) -> sqlx::Result<()> {
         sqlx::query! {
-            r#"INSERT or IGNORE INTO lemma (nama) VALUES (?)"#,
+            r#"INSERT or IGNORE INTO lemma (id, nama) VALUES (?, ?)"#,
+            self.id,
             self.lemma
         }
         .execute(pool)

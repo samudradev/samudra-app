@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use tracing::instrument;
 
 use crate::io::interface::{AttachmentItemMod, Item, ItemMod};
 use crate::{
@@ -42,6 +43,7 @@ impl<A> AttachmentMod<A>
 where
     A: ItemMod,
 {
+    #[instrument(skip_all)]
     pub async fn submit_changes_with<P>(
         &self,
         parent: &P,
@@ -170,6 +172,22 @@ mod test {
     use crate::io::interface::{FromView, SubmitMod};
     use crate::views::LemmaWithKonsepView;
     use tracing_test::traced_test;
+    use crate::data::LemmaItemMod;
+
+    #[sqlx::test]
+    #[traced_test]
+    fn test_new_lemma(pool: sqlx::Pool<sqlx::Sqlite>) -> Result<(), sqlx::Error> {
+        let new = LemmaItem {
+            id: AutoGen::Unknown,
+            lemma: "cakera tokokan".into(),
+            konseps: vec![]
+        };
+        LemmaItemMod::from_item(&new).submit_mod(&pool).await?;
+        let views = LemmaWithKonsepView::query_lemma("cakera tokokan".into(), &pool).await?;
+        let data = LemmaItem::from_views(&views);
+        assert_eq!(data, vec![new]);
+        Ok(())
+    }
 
     #[sqlx::test(fixtures("lemma"))]
     #[traced_test]
@@ -287,7 +305,7 @@ mod test {
             .first()
             .expect("Vec<LemmaDataRepr> is zero sized")
             .to_owned();
-        assert_eq!(dbg!(&old).konseps.len(), 2);
+        assert_eq!(&old.konseps.len(), &2);
         let new: LemmaItem = LemmaItem {
             id: AutoGen::Known(1),
             lemma: "cakera tokokan".into(),

@@ -2,6 +2,7 @@ use crate::changes::{AttachmentMod, CompareAttachable, FieldMod};
 use crate::io::interface::{AttachmentItemMod, FromView, FromViewMap, Item, ItemMod};
 use crate::prelude::*;
 use std::collections::HashMap;
+use tracing::instrument;
 
 use crate::data::items::cakupan::CakupanItem;
 use crate::data::items::lemma::LemmaItem;
@@ -40,65 +41,12 @@ impl ItemMod for KonsepItemMod {
         }
     }
 }
-
-impl KonsepItemMod {
-    pub async fn submit_changes(&self, pool: &sqlx::Pool<sqlx::Sqlite>) -> sqlx::Result<()> {
-        if let AutoGen::Known(t) = self.id {
-            let keterangan = &self.keterangan.value();
-            let golkat = &self.golongan_kata.value();
-            let _result = sqlx::query! {
-                "UPDATE konsep SET keterangan = ?, golongan_id = ? WHERE id == ?;", keterangan, golkat, t
-            }.execute(pool).await?;
-            let attachment_cakupan = &self.cakupans;
-            let konsep_skeleton = KonsepItem::skeleton_from_mod(self);
-            for attached in attachment_cakupan.attached.clone().into_iter() {
-                attached
-                    .submit_attachment_to(&konsep_skeleton, pool)
-                    .await
-                    .expect("Error!");
-            }
-            for detached in attachment_cakupan.detached.clone().into_iter() {
-                detached
-                    .submit_detachment_from(&konsep_skeleton, pool)
-                    .await
-                    .expect("Error!");
-            }
-            let attachment_kata_asing = &self.kata_asing;
-            for attached in attachment_kata_asing.attached.clone().into_iter() {
-                attached
-                    .submit_attachment_to(&konsep_skeleton, pool)
-                    .await
-                    .expect("Error!");
-            }
-            for detached in attachment_kata_asing.detached.clone().into_iter() {
-                detached
-                    .submit_detachment_from(&konsep_skeleton, pool)
-                    .await
-                    .expect("Error!");
-            }
-            Ok(())
-        } else {
-            Ok(())
-        }
-    }
-}
 impl KonsepItem {
     pub fn null() -> Self {
         Self {
             id: AutoGen::Unknown,
             keterangan: "".into(),
             golongan_kata: "".into(),
-            cakupans: vec![],
-            kata_asing: vec![],
-        }
-    }
-
-    /// Trivially construct data from KonsepItemMod without attachment data
-    pub fn skeleton_from_mod(other: &KonsepItemMod) -> Self {
-        Self {
-            id: other.id.clone(),
-            keterangan: other.keterangan.value().to_string(),
-            golongan_kata: other.golongan_kata.value().to_string(),
             cakupans: vec![],
             kata_asing: vec![],
         }
@@ -130,12 +78,20 @@ impl PartialEq for KonsepItem {
 
 #[async_trait::async_trait]
 impl AttachmentItemMod<LemmaItem, sqlx::Sqlite> for KonsepItemMod {
+    #[instrument(skip_all)]
     async fn submit_attachment_to(
         &self,
         parent: &LemmaItem,
         pool: &sqlx::Pool<sqlx::Sqlite>,
     ) -> sqlx::Result<()> {
         let konsep = KonsepItem::partial_from_mod(self);
+        tracing::trace!(
+            "Attaching <{}:{}> to <{}:{}>",
+            konsep.id,
+            konsep.keterangan,
+            parent.id,
+            parent.lemma
+        );
         sqlx::query! {
             r#" INSERT or IGNORE INTO konsep (keterangan, lemma_id, golongan_id)
                 VALUES (
@@ -150,24 +106,8 @@ impl AttachmentItemMod<LemmaItem, sqlx::Sqlite> for KonsepItemMod {
         }
         .execute(pool)
         .await?;
-        for cakupan in self.cakupans.attached.iter() {
-            cakupan.submit_attachment_to(&konsep, pool).await?;
-        }
-        for cakupan in self.cakupans.detached.iter() {
-            cakupan.submit_detachment_from(&konsep, pool).await?;
-        }
-        for cakupan in self.cakupans.modified.iter() {
-            cakupan.submit_modification_with(&konsep, pool).await?;
-        }
-        for kata_asing in self.kata_asing.attached.iter() {
-            kata_asing.submit_attachment_to(&konsep, pool).await?;
-        }
-        for kata_asing in self.kata_asing.detached.iter() {
-            kata_asing.submit_detachment_from(&konsep, pool).await?;
-        }
-        for kata_asing in self.kata_asing.attached.iter() {
-            kata_asing.submit_modification_with(&konsep, pool).await?;
-        }
+        self.cakupans.submit_changes_with(&konsep, pool).await?;
+        self.kata_asing.submit_changes_with(&konsep, pool).await?;
         Ok(())
     }
     async fn submit_detachment_from(
@@ -175,6 +115,13 @@ impl AttachmentItemMod<LemmaItem, sqlx::Sqlite> for KonsepItemMod {
         _parent: &LemmaItem,
         _pool: &sqlx::Pool<sqlx::Sqlite>,
     ) -> sqlx::Result<()> {
+        tracing::trace!(
+            "Detaching <{}:{}> from <{}:{}>",
+            self.id,
+            self.keterangan.value(),
+            _parent.id,
+            _parent.lemma
+        );
         todo!()
     }
 
@@ -184,9 +131,16 @@ impl AttachmentItemMod<LemmaItem, sqlx::Sqlite> for KonsepItemMod {
         pool: &Pool<Sqlite>,
     ) -> sqlx::Result<()> {
         let konsep = KonsepItem::partial_from_mod(self);
+        tracing::trace!(
+            "Modifying <{}:{}> with <{}:{}>",
+            konsep.id,
+            konsep.keterangan,
+            parent.id,
+            parent.lemma
+        );
         sqlx::query! {
             r#" UPDATE konsep
-                SET keterangan = ?, golongan_id = ?
+                SET keterangan = ?, golongan_id = (SELECT id FROM golongan_kata WHERE golongan_kata.nama = ?)
                 WHERE (
                     id = ?
                     AND
@@ -200,24 +154,8 @@ impl AttachmentItemMod<LemmaItem, sqlx::Sqlite> for KonsepItemMod {
         }
         .execute(pool)
         .await?;
-        for cakupan in self.cakupans.attached.iter() {
-            cakupan.submit_attachment_to(&konsep, pool).await?;
-        }
-        for cakupan in self.cakupans.detached.iter() {
-            cakupan.submit_detachment_from(&konsep, pool).await?;
-        }
-        for cakupan in self.cakupans.modified.iter() {
-            cakupan.submit_modification_with(&konsep, pool).await?;
-        }
-        for kata_asing in self.kata_asing.attached.iter() {
-            kata_asing.submit_attachment_to(&konsep, pool).await?;
-        }
-        for kata_asing in self.kata_asing.detached.iter() {
-            kata_asing.submit_detachment_from(&konsep, pool).await?;
-        }
-        for kata_asing in self.kata_asing.attached.iter() {
-            kata_asing.submit_modification_with(&konsep, pool).await?;
-        }
+        self.cakupans.submit_changes_with(&konsep, pool).await?;
+        self.kata_asing.submit_changes_with(&konsep, pool).await?;
         Ok(())
     }
 }

@@ -1,3 +1,4 @@
+use tracing::instrument;
 use crate::io::interface::{AttachmentItemMod, FromView, Item, ItemMod, SubmitItem};
 use crate::prelude::*;
 use crate::states::{Pool, Sqlite};
@@ -70,22 +71,29 @@ impl SubmitItem<sqlx::Sqlite> for CakupanItem {
     }
 
     async fn submit_partial(&self, pool: &Pool<Sqlite>) -> sqlx::Result<()> {
-        todo!()
+        self.submit_full(pool).await
     }
 }
 
 #[async_trait::async_trait]
 impl AttachmentItemMod<KonsepItem, sqlx::Sqlite> for CakupanItem {
+    #[instrument(skip_all)]
     async fn submit_attachment_to(
         &self,
         parent: &KonsepItem,
         pool: &sqlx::Pool<sqlx::Sqlite>,
     ) -> sqlx::Result<()> {
+        tracing::trace!(
+            "Attaching <Cakupan={}> to <{}:{}>",
+            self.0,
+            parent.id,
+            parent.keterangan
+        );
         sqlx::query! {
                 r#" INSERT or IGNORE INTO cakupan (nama) VALUES (?);
-                INSERT or IGNORE INTO cakupan_x_konsep (cakupan_id, konsep_id) 
+                INSERT or IGNORE INTO cakupan_x_konsep (cakupan_id, konsep_id)
                     VALUES (
-                        (SELECT id FROM cakupan WHERE cakupan.nama = ?), 
+                        (SELECT id FROM cakupan WHERE cakupan.nama = ?),
                         (SELECT id FROM konsep WHERE konsep.keterangan = ?)
                     );"#,
             self.0,
@@ -102,11 +110,17 @@ impl AttachmentItemMod<KonsepItem, sqlx::Sqlite> for CakupanItem {
         parent: &KonsepItem,
         pool: &sqlx::Pool<sqlx::Sqlite>,
     ) -> sqlx::Result<()> {
+        tracing::trace!(
+            "Detaching <Cakupan={}> from <{}:{}>",
+            self.0,
+            parent.id,
+            parent.keterangan
+        );
         sqlx::query! {
             r#" DELETE FROM cakupan_x_konsep AS cxk
                 WHERE (
-                    cxk.cakupan_id = (SELECT id FROM cakupan WHERE cakupan.nama = ?) 
-                        AND 
+                    cxk.cakupan_id = (SELECT id FROM cakupan WHERE cakupan.nama = ?)
+                        AND
                     cxk.konsep_id = (SELECT id FROM konsep WHERE konsep.keterangan = ?)
                 );"#,
             self.0,
@@ -123,6 +137,12 @@ impl AttachmentItemMod<KonsepItem, sqlx::Sqlite> for CakupanItem {
         parent: &KonsepItem,
         pool: &Pool<Sqlite>,
     ) -> sqlx::Result<()> {
+        tracing::trace!(
+            "Modifying <Cakupan={}> with <{}:{}>",
+            self.0,
+            parent.id,
+            parent.keterangan
+        );
         todo!()
     }
 }

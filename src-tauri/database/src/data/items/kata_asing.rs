@@ -80,7 +80,7 @@ impl SubmitItem<sqlx::Sqlite> for KataAsingItem {
     }
 
     async fn submit_partial(&self, pool: &Pool<Sqlite>) -> sqlx::Result<()> {
-        todo!()
+        self.submit_full(pool).await
     }
 }
 
@@ -91,9 +91,16 @@ impl AttachmentItemMod<KonsepItem, sqlx::Sqlite> for KataAsingItem {
         parent: &KonsepItem,
         pool: &sqlx::Pool<sqlx::Sqlite>,
     ) -> sqlx::Result<()> {
+        tracing::trace!(
+            "Attaching <KataAsing {}:{}> to <{}:{}>",
+            self.bahasa,
+            self.nama,
+            parent.id,
+            parent.keterangan
+        );
         sqlx::query! {
              r#"INSERT or IGNORE INTO kata_asing (nama, bahasa) VALUES (?,?);
-                INSERT or IGNORE INTO kata_asing_x_konsep (kata_asing_id, konsep_id) 
+                INSERT or IGNORE INTO kata_asing_x_konsep (kata_asing_id, konsep_id)
                 VALUES (
                     (SELECT id FROM kata_asing WHERE kata_asing.nama = ? AND kata_asing.bahasa = ?),
                     (SELECT id FROM konsep WHERE konsep.keterangan = ?)
@@ -114,11 +121,18 @@ impl AttachmentItemMod<KonsepItem, sqlx::Sqlite> for KataAsingItem {
         parent: &KonsepItem,
         pool: &sqlx::Pool<sqlx::Sqlite>,
     ) -> sqlx::Result<()> {
+        tracing::trace!(
+            "Detaching <KataAsing {}:{}> from <{}:{}>",
+            self.bahasa,
+            self.nama,
+            parent.id,
+            parent.keterangan
+        );
         sqlx::query! {
-            r#"DELETE FROM kata_asing_x_konsep AS kaxk 
+            r#"DELETE FROM kata_asing_x_konsep AS kaxk
                WHERE (
-                    kaxk.kata_asing_id = (SELECT id FROM kata_asing WHERE kata_asing.nama = ? AND kata_asing.bahasa = ?) 
-                        AND 
+                    kaxk.kata_asing_id = (SELECT id FROM kata_asing WHERE kata_asing.nama = ? AND kata_asing.bahasa = ?)
+                        AND
                     kaxk.konsep_id = (SELECT id FROM konsep WHERE konsep.keterangan = ?)
                 );"#,
             self.nama,
@@ -136,6 +150,13 @@ impl AttachmentItemMod<KonsepItem, sqlx::Sqlite> for KataAsingItem {
         parent: &KonsepItem,
         pool: &Pool<Sqlite>,
     ) -> sqlx::Result<()> {
+        tracing::trace!(
+            "Modifying <KataAsing {}:{}> with <{}:{}>",
+            self.bahasa,
+            self.nama,
+            parent.id,
+            parent.keterangan
+        );
         todo!()
     }
 }
