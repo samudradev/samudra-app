@@ -83,11 +83,11 @@ impl SubmitItem<sqlx::Sqlite> for KataAsingItem {
         self.submit_full(pool).await
     }
 
-    async fn submit_full_removal(&self, pool: &Pool<Sqlite>) -> sqlx::Result<()> {
+    async fn submit_full_removal(&self, _pool: &Pool<Sqlite>) -> sqlx::Result<()> {
         todo!()
     }
 
-    async fn submit_partial_removal(&self, pool: &Pool<Sqlite>) -> sqlx::Result<()> {
+    async fn submit_partial_removal(&self, _pool: &Pool<Sqlite>) -> sqlx::Result<()> {
         todo!()
     }
 }
@@ -156,7 +156,7 @@ impl AttachmentItemMod<KonsepItem, sqlx::Sqlite> for KataAsingItem {
     async fn submit_modification_with(
         &self,
         parent: &KonsepItem,
-        pool: &Pool<Sqlite>,
+        _pool: &Pool<Sqlite>,
     ) -> sqlx::Result<()> {
         tracing::trace!(
             "Modifying <KataAsing {}:{}> with <{}:{}>",

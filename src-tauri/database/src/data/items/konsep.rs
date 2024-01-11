@@ -33,7 +33,7 @@ impl ItemMod for KonsepItemMod {
 
     fn from_item(value: &Self::FromItem) -> Self {
         Self {
-            id: value.id.clone(),
+            id: value.id,
             keterangan: FieldMod::Fixed(value.keterangan.clone()),
             golongan_kata: FieldMod::Fixed(value.golongan_kata.clone()),
             cakupans: AttachmentMod::from(value.cakupans.clone()),
@@ -173,7 +173,7 @@ impl Item for KonsepItem {
             });
         }
         Ok(KonsepItemMod {
-            id: self.id.clone(),
+            id: self.id,
             keterangan: FieldMod::compare(self.keterangan.clone(), other.keterangan.clone()),
             golongan_kata: FieldMod::compare(
                 self.golongan_kata.clone(),
@@ -186,7 +186,7 @@ impl Item for KonsepItem {
 
     fn partial_from_mod(other: &Self::IntoMod) -> Self {
         KonsepItem {
-            id: other.id.clone(),
+            id: other.id,
             keterangan: other.keterangan.value().to_string(),
             golongan_kata: other.golongan_kata.value().to_string(),
             cakupans: vec![],

@@ -54,13 +54,13 @@ where
         P: Item,
     {
         for attached in self.attached.iter() {
-            attached.submit_attachment_to(&parent, pool).await?;
+            attached.submit_attachment_to(parent, pool).await?;
         }
         for detached in self.detached.iter() {
-            detached.submit_detachment_from(&parent, pool).await?;
+            detached.submit_detachment_from(parent, pool).await?;
         }
         for modified in self.modified.iter() {
-            modified.submit_modification_with(&parent, pool).await?;
+            modified.submit_modification_with(parent, pool).await?;
         }
         Ok(())
     }
@@ -69,7 +69,7 @@ where
 impl<A: ItemMod, I: Item<IntoMod = A>> From<Vec<I>> for AttachmentMod<A> {
     fn from(value: Vec<I>) -> Self {
         AttachmentMod {
-            attached: Vec::from_iter(value.iter().map(|item| item.modify_into(&item).unwrap())),
+            attached: Vec::from_iter(value.iter().map(|item| item.modify_into(item).unwrap())),
             detached: vec![],
             modified: vec![],
         }
@@ -146,7 +146,7 @@ impl CompareAttachable<KonsepItem, KonsepItemMod> for LemmaItem {
         let detached = self
             .find_detached(other)
             .iter()
-            .map(|item| KonsepItem::partial_from_mod(item))
+            .map(KonsepItem::partial_from_mod)
             .collect_vec();
         let old = Vec::clone(&self.items())
             .into_iter()

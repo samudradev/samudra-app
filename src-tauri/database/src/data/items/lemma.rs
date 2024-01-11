@@ -38,7 +38,7 @@ impl Item for LemmaItem {
             })
         } else {
             Ok(LemmaItemMod {
-                id: self.id.clone(),
+                id: self.id,
                 lemma: FieldMod::compare(self.lemma.clone(), other.lemma.clone()),
                 konseps: self.compare_attachment(other.konseps.to_owned()),
             })
@@ -47,7 +47,7 @@ impl Item for LemmaItem {
 
     fn partial_from_mod(other: &LemmaItemMod) -> Self {
         LemmaItem {
-            id: other.id.clone(),
+            id: other.id,
             lemma: other.lemma.value().to_string(),
             konseps: vec![],
         }
@@ -59,7 +59,7 @@ impl ItemMod for LemmaItemMod {
 
     fn from_item(value: &Self::FromItem) -> Self {
         Self {
-            id: value.id.clone(),
+            id: value.id,
             lemma: FieldMod::Fixed(value.lemma.clone()),
             konseps: AttachmentMod::from(value.konseps.clone()),
         }
@@ -83,7 +83,7 @@ impl SubmitMod<sqlx::Sqlite> for LemmaItemMod {
 /// To compare changes, use Diff trait.
 impl PartialEq for LemmaItem {
     fn eq(&self, other: &Self) -> bool {
-        let konseps = Vec::from_iter(self.konseps.clone().into_iter());
+        let konseps = Vec::from_iter(self.konseps.clone());
         self.lemma == other.lemma
             && other
                 .konseps
@@ -117,11 +117,11 @@ impl SubmitItem<sqlx::Sqlite> for LemmaItem {
         Ok(())
     }
 
-    async fn submit_full_removal(&self, pool: &Pool<Sqlite>) -> sqlx::Result<()> {
+    async fn submit_full_removal(&self, _pool: &Pool<Sqlite>) -> sqlx::Result<()> {
         todo!()
     }
 
-    async fn submit_partial_removal(&self, pool: &Pool<Sqlite>) -> sqlx::Result<()> {
+    async fn submit_partial_removal(&self, _pool: &Pool<Sqlite>) -> sqlx::Result<()> {
         todo!()
     }
 }
