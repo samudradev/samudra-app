@@ -16,11 +16,13 @@
     export let index: number = 0;
     $: cakupan_list = [] as string[];
     $: kata_asing_list = [] as KataAsingItem[];
+    let id_item: bigint;
     let keterangan_item: string;
     let golongan_kata_item: string;
 
     onMount(() => {
         if (konsep != null && konsep != undefined) {
+            id_item = konsep.id;
             keterangan_item = konsep.keterangan;
             golongan_kata_item = konsep.golongan_kata;
             cakupan_list = konsep.cakupans;
@@ -31,7 +33,7 @@
     // Callables
     function save_new_konsep() {
         konsep = {
-            id: null,
+            id: id_item,
             keterangan: keterangan_item,
             golongan_kata: golongan_kata_item,
             cakupans: cakupan_list,
