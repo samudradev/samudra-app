@@ -20,7 +20,7 @@ jobs:
       with:
         targets: x86_64-unknown-linux-musl
     - name: Set default
-      run: rustup default x86_64-unknown-linux-musl
+      run: rustup default stable-x86_64-unknown-linux-musl
     - name: Build
       run: cargo build --verbose --manifest-path ./src-tauri/Cargo.toml --workspace
     - name: Run tests
