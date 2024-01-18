@@ -72,11 +72,11 @@ impl From<&AppPaths> for AppConfig {
                         )
                         .expect("Error occured while copying backup configuration.");
                         println!("An error occured while reading `./databases.toml`. Please check `./databases.bak.toml`.\n{}", e);
-                        Self::fallback(&value)
+                        Self::fallback(value)
                     }
                 }
             }
-            false => Self::fallback(&value),
+            false => Self::fallback(value),
         }
     }
 }
@@ -91,7 +91,7 @@ impl AppConfig {
     }
 
     pub fn set_display_name(&self, name: String) {
-        *self.display_name.lock().unwrap() = name.into();
+        *self.display_name.lock().unwrap() = name;
     }
     pub fn get_display_name(&self) -> String {
         self.display_name.lock().unwrap().to_string()
@@ -144,7 +144,7 @@ impl AppConfig {
     pub fn set_active(&self, name: String) -> &Self {
         match self.databases.lock().unwrap().get(&name) {
             Some(_database) => {
-                *self.active.lock().unwrap() = name.into();
+                *self.active.lock().unwrap() = name;
                 self
             }
             None => panic!("Error while accessing the active name `{}`.", name),
@@ -168,10 +168,10 @@ impl AppPaths {
             std::fs::create_dir(&self.root).unwrap();
         }
         if !&self.storage_dir().exists() {
-            std::fs::create_dir(&self.storage_dir()).unwrap();
+            std::fs::create_dir(self.storage_dir()).unwrap();
         }
         if !&self.export_dir().exists() {
-            std::fs::create_dir(&self.export_dir()).unwrap();
+            std::fs::create_dir(self.export_dir()).unwrap();
         }
         self
     }

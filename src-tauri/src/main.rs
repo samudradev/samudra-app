@@ -10,18 +10,14 @@ mod menu;
 
 use appstate::AppConfig;
 use appstate::AppPaths;
-use database::insertions::ToTable;
+use database::io::interface::{Item, SubmitMod, FromView, SubmitItem};
 use database::states::Connection;
 use database::states::Counts;
 use database::views::LemmaWithKonsepView;
 use tauri::State;
+use database::data::LemmaItem;
 
-use database;
-use database::data::{Item, LemmaItem};
-use database::operations::DiffSumbittable;
-
-// TODO FEAT Share picture
-// TODO Manage errors gracefully
+// TODO: Manage errors gracefully
 
 /// Exposes the active database URL to the frontend.
 #[tauri::command(async)]
@@ -79,7 +75,7 @@ async fn get_golongan_kata_enumeration(
         .get_golongan_kata_enumeration()
         .await
         .unwrap();
-    if res.len() == 0 {
+    if res.is_empty() {
         res = config
             .connection()
             .await
@@ -100,7 +96,7 @@ async fn get_golongan_kata_enumeration(
 #[tauri::command(async)]
 async fn insert_lemma(config: State<'_, AppConfig>, item: LemmaItem) -> Result<(), String> {
     let conn = config.connection().await.pool;
-    item.insert_safe(&conn).await.unwrap();
+    item.submit_full(&conn).await.unwrap();
     Ok(())
 }
 
@@ -108,7 +104,7 @@ async fn insert_lemma(config: State<'_, AppConfig>, item: LemmaItem) -> Result<(
 #[tauri::command(async)]
 async fn delete_lemma(config: State<'_, AppConfig>, item: LemmaItem) -> Result<(), String> {
     let conn = config.connection().await.pool;
-    item.remove(&conn).await.unwrap();
+    item.submit_partial_removal(&conn).await.unwrap();
     Ok(())
 }
 
@@ -173,7 +169,7 @@ async fn submit_changes(
     new: LemmaItem,
 ) -> Result<(), String> {
     let db = config.connection().await.pool;
-    old.submit_changes(&new, &db).await.unwrap();
+    old.modify_into(&new).unwrap().submit_mod(&db).await.unwrap();
     Ok(())
 }
 

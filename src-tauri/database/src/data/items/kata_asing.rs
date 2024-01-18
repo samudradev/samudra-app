@@ -1,16 +1,21 @@
-use crate::data::Item;
+use crate::io::interface::{AttachmentItemMod, FromView, Item, ItemMod, SubmitItem};
 use crate::prelude::*;
 
-use crate::models::kata_asing::{InsertKataAsing, KataAsing};
+use crate::states::{Pool, Sqlite};
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, diff::Diff, ts_rs::TS)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, ts_rs::TS)]
 #[ts(export, export_to = "../../src/bindings/")]
-#[diff(attr(
-    #[derive(Debug)]
-))]
 pub struct KataAsingItem {
     pub nama: String,
     pub bahasa: String,
+}
+
+impl ItemMod for KataAsingItem {
+    type FromItem = KataAsingItem;
+
+    fn from_item(value: &Self::FromItem) -> Self {
+        value.clone()
+    }
 }
 
 impl KataAsingItem {
@@ -23,13 +28,19 @@ impl KataAsingItem {
 }
 
 impl Item for KataAsingItem {
-    type MAP = (); //PLACEHOLDER
+    type IntoMod = KataAsingItem;
 
-    type VIEW = LemmaWithKonsepView;
-
-    fn from_hashmap(_value: &Self::MAP) -> Vec<Self> {
-        todo!()
+    fn modify_into(&self, other: &Self) -> Result<Self::IntoMod> {
+        Ok(other.clone())
     }
+
+    fn partial_from_mod(other: &Self::IntoMod) -> Self {
+        other.clone()
+    }
+}
+
+impl FromView for KataAsingItem {
+    type VIEW = LemmaWithKonsepView;
 
     fn from_views(value: &Vec<Self::VIEW>) -> Vec<Self> {
         value
@@ -56,66 +67,104 @@ impl Item for KataAsingItem {
 }
 
 #[async_trait::async_trait]
-impl ToTable<sqlx::Sqlite> for KataAsingItem {
-    type OUTPUT = KataAsing;
-
-    async fn insert_safe(self, pool: &sqlx::Pool<sqlx::Sqlite>) -> Result<KataAsing> {
-        match KataAsing::select()
-            .where_("nama = ? AND bahasa = ?")
-            .bind(&self.nama)
-            .bind(&self.bahasa)
-            .fetch_optional(pool)
-            .await?
-        {
-            Some(c) => Ok(c),
-            None => InsertKataAsing {
-                nama: self.nama.clone(),
-                bahasa: self.bahasa.clone(),
-            }
-            .insert(pool)
-            .await
-            .map_err(BackendError::from),
+impl SubmitItem<sqlx::Sqlite> for KataAsingItem {
+    async fn submit_full(&self, pool: &sqlx::Pool<sqlx::Sqlite>) -> sqlx::Result<()> {
+        sqlx::query! {
+            r#"INSERT or IGNORE INTO kata_asing (nama, bahasa) VALUES (?,?)"#,
+            self.nama,
+            self.bahasa
         }
+        .execute(pool)
+        .await?;
+        Ok(())
+    }
+
+    async fn submit_partial(&self, pool: &Pool<Sqlite>) -> sqlx::Result<()> {
+        self.submit_full(pool).await
+    }
+
+    async fn submit_full_removal(&self, _pool: &Pool<Sqlite>) -> sqlx::Result<()> {
+        todo!()
+    }
+
+    async fn submit_partial_removal(&self, _pool: &Pool<Sqlite>) -> sqlx::Result<()> {
+        todo!()
     }
 }
 
 #[async_trait::async_trait]
-impl ToTableWithReference<sqlx::Sqlite> for KataAsingItem {
-    type OUTPUT = ();
-    type REFERENCE = KonsepItem;
-
-    async fn insert_safe_with_reference(
-        self,
-        reference: &Self::REFERENCE,
+impl AttachmentItemMod<KonsepItem, sqlx::Sqlite> for KataAsingItem {
+    async fn submit_attachment_to(
+        &self,
+        parent: &KonsepItem,
         pool: &sqlx::Pool<sqlx::Sqlite>,
-    ) -> Result<()> {
-        let refer = reference.reference_field();
-        sqlx::query! {"INSERT or IGNORE INTO kata_asing (nama, bahasa) VALUES (?,?)", self.nama, self.bahasa}.execute(pool).await.expect("Error inserting kata_asing");
-        sqlx::query! {"INSERT or IGNORE INTO kata_asing_x_konsep (kata_asing_id, konsep_id) VALUES ((SELECT id FROM  kata_asing WHERE kata_asing.nama = ? AND kata_asing.bahasa = ?), ?)",
-            self.nama,
+    ) -> sqlx::Result<()> {
+        tracing::trace!(
+            "Attaching <KataAsing {}:{}> to <{}:{}>",
             self.bahasa,
-            refer
+            self.nama,
+            parent.id,
+            parent.keterangan
+        );
+        sqlx::query! {
+             r#"INSERT or IGNORE INTO kata_asing (nama, bahasa) VALUES (?,?);
+                INSERT or IGNORE INTO kata_asing_x_konsep (kata_asing_id, konsep_id)
+                VALUES (
+                    (SELECT id FROM kata_asing WHERE kata_asing.nama = ? AND kata_asing.bahasa = ?),
+                    (SELECT id FROM konsep WHERE konsep.keterangan = ?)
+                );"#,
+             self.nama,
+            self.bahasa,
+           self.nama,
+            self.bahasa,
+            parent.keterangan
         }
         .execute(pool)
         .await
-        .expect("Error inserting cakupan_x_konsep");
+        .expect("Error attaching kata_asing to konsep");
         Ok(())
     }
-    async fn detach_from(
-        self,
-        reference: &Self::REFERENCE,
+    async fn submit_detachment_from(
+        &self,
+        parent: &KonsepItem,
         pool: &sqlx::Pool<sqlx::Sqlite>,
-    ) -> Result<()> {
-        let refer = reference.reference_field();
+    ) -> sqlx::Result<()> {
+        tracing::trace!(
+            "Detaching <KataAsing {}:{}> from <{}:{}>",
+            self.bahasa,
+            self.nama,
+            parent.id,
+            parent.keterangan
+        );
         sqlx::query! {
-            "DELETE FROM kata_asing_x_konsep AS kaxk WHERE kaxk.kata_asing_id = (SELECT id FROM  kata_asing WHERE kata_asing.nama = ? AND kata_asing.bahasa = ?) AND kaxk.konsep_id = ?",
+            r#"DELETE FROM kata_asing_x_konsep AS kaxk
+               WHERE (
+                    kaxk.kata_asing_id = (SELECT id FROM kata_asing WHERE kata_asing.nama = ? AND kata_asing.bahasa = ?)
+                        AND
+                    kaxk.konsep_id = (SELECT id FROM konsep WHERE konsep.keterangan = ?)
+                );"#,
             self.nama,
             self.bahasa,
-            refer
+            parent.keterangan
         }
         .execute(pool)
         .await
         .expect("Error detaching cakupan from konsep");
         Ok(())
+    }
+
+    async fn submit_modification_with(
+        &self,
+        parent: &KonsepItem,
+        _pool: &Pool<Sqlite>,
+    ) -> sqlx::Result<()> {
+        tracing::trace!(
+            "Modifying <KataAsing {}:{}> with <{}:{}>",
+            self.bahasa,
+            self.nama,
+            parent.id,
+            parent.keterangan
+        );
+        todo!()
     }
 }
