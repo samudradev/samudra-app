@@ -26,6 +26,6 @@ jobs:
       with: 
         commands: build --verbose --manifest-path ./src-tauri/Cargo.toml --workspace
     - name: Tests
-      uses: actions-rs/cargo@stable
+      uses: actions-rs/cargo@V1
       with: 
         commands: test --verbose --manifest-path ./src-tauri/Cargo.toml --workspace
