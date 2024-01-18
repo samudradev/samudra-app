@@ -1,8 +1,11 @@
+//! Contains the [CakupanItem].
+
 use tracing::instrument;
 use crate::io::interface::{AttachmentItemMod, FromView, Item, ItemMod, SubmitItem};
 use crate::prelude::*;
 use crate::states::{Pool, Sqlite};
 
+/// The context in which a word with the corresponding definition is used.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, Hash, Eq)]
 pub struct CakupanItem(String);
 

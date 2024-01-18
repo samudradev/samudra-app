@@ -1,6 +1,5 @@
 //! A crate to handle database operations.
 
-// TODO: Tracing
 // TODO: Documentation
 
 pub mod changes;
@@ -8,11 +7,13 @@ pub mod data;
 pub mod errors;
 pub mod io;
 #[deprecated]
+#[doc(hidden)]
 pub mod operations;
 pub mod states;
 pub mod types;
 pub mod views;
 
+#[doc(hidden)]
 pub mod prelude {
     // Datamodels
     pub(crate) use crate::data::items::kata_asing::KataAsingItem;

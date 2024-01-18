@@ -1,8 +1,11 @@
+//! Contains struct [KataAsingItem] which map a foreign word with its language of origin.
+
 use crate::io::interface::{AttachmentItemMod, FromView, Item, ItemMod, SubmitItem};
 use crate::prelude::*;
 
 use crate::states::{Pool, Sqlite};
 
+/// Contains a foreign word with its language of origin.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, ts_rs::TS)]
 #[ts(export, export_to = "../../src/bindings/")]
 pub struct KataAsingItem {
@@ -115,7 +118,7 @@ impl AttachmentItemMod<KonsepItem, sqlx::Sqlite> for KataAsingItem {
                 );"#,
              self.nama,
             self.bahasa,
-           self.nama,
+            self.nama,
             self.bahasa,
             parent.keterangan
         }
