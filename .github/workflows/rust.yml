@@ -17,6 +17,6 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build
-      run: cargo build --verbose --manifest-file ./src-tauri/Cargo.toml --workspace
+      run: cargo build --verbose --manifest-path ./src-tauri/Cargo.toml --workspace
     - name: Run tests
-      run: cargo test --verbose --manifest-file ./src-tauri/Cargo.toml --workspace
+      run: cargo test --verbose --manifest-path ./src-tauri/Cargo.toml --workspace
