@@ -164,9 +164,12 @@ impl CompareAttachable<KonsepItem, KonsepItemMod> for LemmaItem {
             .into_iter()
             .filter(|item| item.id != AutoGen::Unknown)
             .sorted_by(|a, b| a.id.partial_cmp(&b.id).unwrap_or(std::cmp::Ordering::Equal));
+        dbg!(old.clone().map(|i| i.keterangan).collect_vec());
+        dbg!(new.clone().map(|i| i.keterangan).collect_vec());
         assert_eq!(
             old.clone().collect_vec().len(),
-            new.clone().collect_vec().len()
+            new.clone().collect_vec().len(),
+            "The length of potentially modified items does not match the length of old items. Perhaps you forgot to supply the ID of the modified KonsepItem."
         );
         old.zip(new)
             .map(|(o, n)| o.modify_into(&n).expect("Error"))
