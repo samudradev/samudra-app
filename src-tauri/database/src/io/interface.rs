@@ -58,6 +58,9 @@ pub trait Item: Sized {
     fn modify_into(&self, other: &Self) -> Result<Self::IntoMod, BackendError>;
 
     /// Instantiates a new struct with no attachment with data from [Self::IntoMod].
+    ///
+    /// [crate::changes::AttachmentMod] does not provide enough data to rebuild a complete vector of children,
+    /// therefore, any field with [crate::changes::AttachmentMod] is ignored.
 
     fn partial_from_mod(other: &Self::IntoMod) -> Self;
 }
