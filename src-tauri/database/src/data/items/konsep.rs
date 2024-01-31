@@ -112,17 +112,24 @@ impl AttachmentItemMod<LemmaItem, sqlx::Sqlite> for KonsepItemMod {
     }
     async fn submit_detachment_from(
         &self,
-        _parent: &LemmaItem,
-        _pool: &sqlx::Pool<sqlx::Sqlite>,
+        parent: &LemmaItem,
+        pool: &sqlx::Pool<sqlx::Sqlite>,
     ) -> sqlx::Result<()> {
         tracing::trace!(
             "Detaching <{}:{}> from <{}:{}>",
             self.id,
             self.keterangan.value(),
-            _parent.id,
-            _parent.lemma
+            parent.id,
+            parent.lemma
         );
-        todo!()
+        sqlx::query! {
+            r#" DELETE FROM konsep WHERE (id = ? AND lemma_id = ?)"#,
+            self.id,
+            parent.id
+        }
+        .execute(pool)
+        .await?;
+        Ok(())
     }
 
     async fn submit_modification_with(
@@ -169,7 +176,7 @@ impl Item for KonsepItem {
     fn modify_into(&self, other: &Self) -> Result<Self::IntoMod> {
         if self.id != other.id {
             return Err(BackendError {
-                message: String::from("ID Assertion error"),
+                message: format!("ID Assertion error, {} != {}", self.id, other.id),
             });
         }
         Ok(KonsepItemMod {

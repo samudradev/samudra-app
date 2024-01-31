@@ -42,7 +42,7 @@
         data = data;
         new_konsep = {} as KonsepItem;
     }
-
+    
     async function delete_lemma() {
         await invoke("delete_lemma", { item: data });
         LemmaStore.update((value) => {

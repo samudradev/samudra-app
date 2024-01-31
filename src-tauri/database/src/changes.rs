@@ -64,6 +64,14 @@ where
         }
         Ok(())
     }
+
+    pub fn empty() -> AttachmentMod<A> {
+        AttachmentMod {
+            attached: vec![],
+            detached: vec![],
+            modified: vec![],
+        }
+    }
 }
 
 impl<A: ItemMod, I: Item<IntoMod = A>> From<Vec<I>> for AttachmentMod<A> {
@@ -143,14 +151,14 @@ impl CompareAttachable<KonsepItem, KonsepItemMod> for LemmaItem {
             .collect_vec()
     }
     fn find_modified(&self, other: &Vec<KonsepItem>) -> Vec<KonsepItemMod> {
-        let detached = self
+        let detached_id = self
             .find_detached(other)
             .iter()
-            .map(KonsepItem::partial_from_mod)
+            .map(|item| item.id)
             .collect_vec();
         let old = Vec::clone(&self.items())
             .into_iter()
-            .filter(|item| !detached.contains(item))
+            .filter(|item| !detached_id.contains(&item.id))
             .sorted_by(|a, b| a.id.partial_cmp(&b.id).unwrap_or(std::cmp::Ordering::Equal));
         let new = Vec::clone(other)
             .into_iter()
@@ -172,10 +180,10 @@ impl CompareAttachable<KonsepItem, KonsepItemMod> for LemmaItem {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::data::LemmaItemMod;
     use crate::io::interface::{FromView, SubmitMod};
     use crate::views::LemmaWithKonsepView;
     use tracing_test::traced_test;
-    use crate::data::LemmaItemMod;
 
     #[sqlx::test]
     #[traced_test]
@@ -183,7 +191,7 @@ mod test {
         let new = LemmaItem {
             id: AutoGen::Unknown,
             lemma: "cakera tokokan".into(),
-            konseps: vec![]
+            konseps: vec![],
         };
         LemmaItemMod::from_item(&new).submit_mod(&pool).await?;
         let views = LemmaWithKonsepView::query_lemma("cakera tokokan".into(), &pool).await?;
@@ -231,6 +239,91 @@ mod test {
         assert_eq!(data, vec![new]);
         Ok(())
     }
+
+    #[test]
+    #[traced_test]
+    fn test_diff_handling_detach_konsep() -> Result<(), Box<dyn std::error::Error>> {
+        let lemma_1 = LemmaItem {
+            id: AutoGen::Known(1),
+            lemma: "cubaan".into(),
+            konseps: vec![
+                KonsepItem {
+                    id: AutoGen::Known(1),
+                    keterangan: "cubaan simpan 1/2".into(),
+                    golongan_kata: "kata nama".into(),
+                    cakupans: vec![],
+                    kata_asing: vec![],
+                },
+                KonsepItem {
+                    id: AutoGen::Known(2),
+                    keterangan: "cubaan padam".into(),
+                    golongan_kata: "kata nama".into(),
+                    cakupans: vec![],
+                    kata_asing: vec![],
+                },
+                KonsepItem {
+                    id: AutoGen::Known(3),
+                    keterangan: "cubaan simpan 2/2".into(),
+                    golongan_kata: "kata nama".into(),
+                    cakupans: vec![],
+                    kata_asing: vec![],
+                },
+            ],
+        };
+        let lemma_2 = LemmaItem {
+            id: AutoGen::Known(1),
+            lemma: "cubaan".into(),
+            konseps: vec![
+                KonsepItem {
+                    id: AutoGen::Known(1),
+                    keterangan: "cubaan simpan 1/2".into(),
+                    golongan_kata: "kata nama".into(),
+                    cakupans: vec![],
+                    kata_asing: vec![],
+                },
+                KonsepItem {
+                    id: AutoGen::Known(3),
+                    keterangan: "cubaan simpan 2/2".into(),
+                    golongan_kata: "kata nama".into(),
+                    cakupans: vec![],
+                    kata_asing: vec![],
+                },
+            ],
+        };
+        let attachment_mod = lemma_1.compare_attachment(lemma_2.konseps);
+        assert_eq!(
+            attachment_mod.detached,
+            vec![KonsepItemMod {
+                id: AutoGen::Known(2),
+                keterangan: FieldMod::Fixed("cubaan padam".into()),
+                golongan_kata: FieldMod::Fixed("kata nama".into()),
+                cakupans: AttachmentMod::empty(),
+                kata_asing: AttachmentMod::empty()
+            }]
+        );
+        assert_eq!(
+            attachment_mod.modified,
+            vec![
+                KonsepItemMod {
+                    id: AutoGen::Known(1),
+                    keterangan: FieldMod::Fixed("cubaan simpan 1/2".into()),
+                    golongan_kata: FieldMod::Fixed("kata nama".into()),
+                    cakupans: AttachmentMod::empty(),
+                    kata_asing: AttachmentMod::empty(),
+                },
+                KonsepItemMod {
+                    id: AutoGen::Known(3),
+                    keterangan: FieldMod::Fixed("cubaan simpan 2/2".into()),
+                    golongan_kata: FieldMod::Fixed("kata nama".into()),
+                    cakupans: AttachmentMod::empty(),
+                    kata_asing: AttachmentMod::empty(),
+                },
+            ]
+        );
+        assert!(false);
+        Ok(())
+    }
+
     #[sqlx::test(fixtures("lemma"))]
     fn test_diff_handling_detach_cakupan(
         pool: sqlx::Pool<sqlx::Sqlite>,

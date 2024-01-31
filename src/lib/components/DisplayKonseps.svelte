@@ -26,6 +26,13 @@
         konseps = konseps;
         edit_at = -1;
     }
+
+    function remove_konsep_from_list(index: number) {
+        konseps.splice(index, 1);
+        konseps = konseps;
+        edit_at = -1;
+    }
+
 </script>
 
 {#each konseps as konsep, i}
@@ -35,6 +42,9 @@
             index={i}
             onSubmit={() => {
                 update_value_at(konsep, i);
+            }}
+            onDelete={() => {
+                remove_konsep_from_list(i);
             }}
         />
     {:else}
