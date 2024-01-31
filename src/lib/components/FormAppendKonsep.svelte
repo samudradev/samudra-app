@@ -13,6 +13,7 @@
     // Initialize values
     export let konsep: KonsepItem;
     export let onSubmit: VoidFunction = () => {};
+    export let onDelete: VoidFunction = () => {};
     export let index: number = 0;
     $: cakupan_list = [] as string[];
     $: kata_asing_list = [] as KataAsingItem[];
@@ -57,9 +58,14 @@
         >
             {index + 1}.
             <SelectGolonganKata bind:golongan_kata={golongan_kata_item} />
-            <button type="submit" class="text-right indicator-item btn-primary"
+            <div class="indicator-item">
+            <button type="submit" class="text-right btn-primary"
                 >+</button
             >
+            <button on:click|preventDefault={onDelete} class="text-right btn-secondary"
+                >-</button
+            >
+            </div>
             <textarea
                 class="textarea w-full"
                 placeholder="konsep"
