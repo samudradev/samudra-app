@@ -1,5 +1,12 @@
 PRAGMA foreign_keys=off;
 
+-- Renaming konsep to konsep_temp triggers all references of konsep to be renamed to konsep_temp even with PRAGMA foreign_keys=off
+-- THEREFORE, the current method does the following:
+-- 1. Copies all data from konsep into the newly created konsep_temp,
+-- 2. Drops konsep table,
+-- 3. Recreate konsep table,
+-- 4. Copies data from konsep_temp to konsep
+
 CREATE TEMP TABLE konsep_temp (
     id INTEGER,
     tarikh_masuk TIMESTAMP,
