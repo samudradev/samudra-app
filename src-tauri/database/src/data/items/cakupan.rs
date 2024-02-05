@@ -1,9 +1,9 @@
 //! Contains the [CakupanItem].
 
-use tracing::instrument;
 use crate::io::interface::{AttachmentItemMod, FromView, Item, ItemMod, SubmitItem};
 use crate::prelude::*;
 use crate::states::{Pool, Sqlite};
+use tracing::instrument;
 
 /// The context in which a word with the corresponding definition is used.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, Hash, Eq)]
@@ -61,30 +61,30 @@ impl From<String> for CakupanItem {
     }
 }
 
-#[async_trait::async_trait]
-impl SubmitItem<sqlx::Sqlite> for CakupanItem {
-    async fn submit_full(&self, pool: &sqlx::Pool<sqlx::Sqlite>) -> sqlx::Result<()> {
-        sqlx::query! {
-            r#"INSERT or IGNORE INTO cakupan (nama) VALUES (?)"#,
-            self.0
-        }
-        .execute(pool)
-        .await?;
-        Ok(())
-    }
-
-    async fn submit_partial(&self, pool: &Pool<Sqlite>) -> sqlx::Result<()> {
-        self.submit_full(pool).await
-    }
-
-    async fn submit_full_removal(&self, _pool: &Pool<Sqlite>) -> sqlx::Result<()> {
-        todo!()
-    }
-
-    async fn submit_partial_removal(&self, _pool: &Pool<Sqlite>) -> sqlx::Result<()> {
-        todo!()
-    }
-}
+// #[async_trait::async_trait]
+// impl SubmitItem<sqlx::Sqlite> for CakupanItem {
+//     async fn submit_full(&self, pool: &sqlx::Pool<sqlx::Sqlite>) -> sqlx::Result<()> {
+//         sqlx::query! {
+//             r#"INSERT or IGNORE INTO cakupan (nama) VALUES (?)"#,
+//             self.0
+//         }
+//         .execute(pool)
+//         .await?;
+//         Ok(())
+//     }
+//
+//     async fn submit_partial(&self, pool: &Pool<Sqlite>) -> sqlx::Result<()> {
+//         self.submit_full(pool).await
+//     }
+//
+//     async fn submit_full_removal(&self, _pool: &Pool<Sqlite>) -> sqlx::Result<()> {
+//         todo!()
+//     }
+//
+//     async fn submit_partial_removal(&self, _pool: &Pool<Sqlite>) -> sqlx::Result<()> {
+//         todo!()
+//     }
+// }
 
 #[async_trait::async_trait]
 impl AttachmentItemMod<KonsepItem, sqlx::Sqlite> for CakupanItem {
@@ -101,7 +101,8 @@ impl AttachmentItemMod<KonsepItem, sqlx::Sqlite> for CakupanItem {
             parent.keterangan
         );
         sqlx::query! {
-                r#" INSERT or IGNORE INTO cakupan (nama) VALUES (?);
+                r#"
+                INSERT or IGNORE INTO cakupan (nama) VALUES (?);
                 INSERT or IGNORE INTO cakupan_x_konsep (cakupan_id, konsep_id)
                     VALUES (
                         (SELECT id FROM cakupan WHERE cakupan.nama = ?),

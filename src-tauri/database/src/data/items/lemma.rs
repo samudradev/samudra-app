@@ -227,8 +227,15 @@ impl SubmitItem<sqlx::Sqlite> for LemmaItem {
         todo!()
     }
 
-    async fn submit_partial_removal(&self, _pool: &Pool<Sqlite>) -> sqlx::Result<()> {
-        todo!()
+    async fn submit_partial_removal(&self, pool: &Pool<Sqlite>) -> sqlx::Result<()> {
+        sqlx::query! {
+            r#"DELETE FROM lemma WHERE (lemma.id = ? AND lemma.nama = ?)"#,
+            self.id,
+            self.lemma
+        }
+        .execute(pool)
+        .await?;
+        Ok(())
     }
 }
 
