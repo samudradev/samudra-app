@@ -1,3 +1,5 @@
+//! Contains general modification structs and enums.
+
 use itertools::Itertools;
 use tracing::instrument;
 
@@ -7,6 +9,7 @@ use crate::{
     prelude::{AutoGen, KataAsingItem, KonsepItem},
 };
 
+/// [ItemMod] fields.
 #[derive(Debug, Clone, PartialEq)]
 pub enum FieldMod<T> {
     New(T),
@@ -32,6 +35,10 @@ impl<T: PartialEq> FieldMod<T> {
     }
 }
 
+/// [ItemMod] attachment fields.
+///
+/// An attachment field is indicated by a vector of children [Items](Item).
+/// The children items in this struct implements [ItemMod].
 #[derive(Debug, Clone, PartialEq)]
 pub struct AttachmentMod<A: ItemMod> {
     pub attached: Vec<A>,
@@ -84,6 +91,7 @@ impl<A: ItemMod, I: Item<IntoMod = A>> From<Vec<I>> for AttachmentMod<A> {
     }
 }
 
+/// A trait which compares vectors of children for use with [AttachmentMod].
 pub trait CompareAttachable<I: PartialEq + Clone + Item<IntoMod = A>, A: ItemMod<FromItem = I>> {
     fn items(&self) -> Vec<I>;
 

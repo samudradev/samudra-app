@@ -1,3 +1,5 @@
+//! The data structure of a definition is represented using [KonsepItem].
+
 use crate::changes::{AttachmentMod, CompareAttachable, FieldMod};
 use crate::io::interface::{AttachmentItemMod, FromView, FromViewMap, Item, ItemMod};
 use crate::prelude::*;
@@ -8,6 +10,16 @@ use crate::data::items::cakupan::CakupanItem;
 use crate::data::items::lemma::LemmaItem;
 use crate::states::{Pool, Sqlite};
 
+/// Represents the definition of a [LemmaItem] with tags.
+///
+/// A single [LemmaItem] can contain multiple [KonsepItems](KonsepItem).
+/// Therefore, a map from [LemmaItem] to [KonsepItem] is a One-to-Many map.
+///
+/// ## Tags
+/// A tag enriches a definition by presenting additional contexts to understand the meaning.
+/// The following are the tags implemented in this struct:
+/// - [cakupans](KonsepItem#structfield.cakupans): the communication contexts of the definition.
+/// - [kata_asing](KonsepItem#structfield.kata_asing): words with equivalent meaning in other languages.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ts_rs::TS)]
 #[ts(export, export_to = "../../src/bindings/")]
 pub struct KonsepItem {
@@ -19,6 +31,9 @@ pub struct KonsepItem {
     pub kata_asing: Vec<KataAsingItem>,
 }
 
+/// A modified [KonsepItem].
+///
+/// Its usage is similar to [LemmaItemMod](crate::data::LemmaItemMod).
 #[derive(Debug, Clone, PartialEq)]
 pub struct KonsepItemMod {
     pub id: AutoGen<i64>,
@@ -53,9 +68,6 @@ impl KonsepItem {
     }
 }
 
-/// This PartialEq trait is mainly used for testing purposes.
-/// Therefore, id comparison is ignored.
-/// To compare changes, use Diff trait.
 impl PartialEq for KonsepItem {
     fn eq(&self, other: &Self) -> bool {
         self.keterangan == other.keterangan

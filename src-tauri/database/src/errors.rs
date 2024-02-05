@@ -1,3 +1,5 @@
+//! Custom error types.
+
 use std::{error::Error, fmt::Display};
 
 pub(crate) type Result<T> = std::result::Result<T, BackendError>;

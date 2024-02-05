@@ -1,3 +1,5 @@
+//! Handles how data interact with input and output
+
 pub mod interface;
 
 // use crate::data::LemmaItem;

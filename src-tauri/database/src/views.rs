@@ -1,3 +1,5 @@
+//! A module that contains definition of structs implementing [View].
+
 use std::collections::HashMap;
 
 use itertools::Itertools;
@@ -16,7 +18,7 @@ use crate::io::interface::{IntoViewMap, View};
 /// # let pool_url = ":memory:";
 /// let pool = sqlx::SqlitePool::connect(pool_url).await.expect("Connection error");
 /// let lemma_views: Vec<LemmaWithKonsepView> = LemmaWithKonsepView::query_lemma(
-///         "lemma_1".to_string(),
+///         "aplikasi".to_string(),
 ///          &pool
 ///     ).await.expect("Query error");
 /// # });
@@ -27,21 +29,29 @@ use crate::io::interface::{IntoViewMap, View};
 ///```
 #[derive(Debug, Clone, sqlx::FromRow, Default)]
 pub struct LemmaWithKonsepView {
-    pub lemma: String,
-    pub konsep: Option<String>,
-    pub golongan_kata: Option<String>,
-    pub cakupan: Option<String>,
-    pub kata_asing: Option<String>,
-    pub bahasa_asing: Option<String>,
-    /// lemma_id
+    /// ID (Primary): [LemmaItem.id](crate::data::LemmaItem#structfield.id)
     pub l_id: i64,
-    /// konsep_id
+    /// Data (Primary): [LemmaItem.nama](crate::data::LemmaItem#structfield.nama)
+    pub lemma: String,
+    /// ID (Secondary): [KonsepItem.id](crate::data::KonsepItem#structfield.id)
     pub k_id: i64,
+    /// Data (Secondary): [KonsepItem.keterangan](crate::data::KonsepItem#structfield.keterangan)
+    pub konsep: Option<String>,
+    /// Data (Secondary): [KonsepItem.golongan_kata](crate::data::KataAsingItem#structfield.golongan_kata)
+    pub golongan_kata: Option<String>,
+    /// Attachment: [CakupanItem](crate::data::CakupanItem)
+    pub cakupan: Option<String>,
+    /// Attachment: [KataAsingItem.nama](crate::data::KataAsingItem#structfield.nama)
+    pub kata_asing: Option<String>,
+    /// Attachment: [KataAsingItem.bahasa](crate::data::KataAsingItem#structfield.bahasa)
+    pub bahasa_asing: Option<String>,
 }
 
 impl View for LemmaWithKonsepView {}
 
 impl LemmaWithKonsepView {
+
+    /// Query a single lemma with its associated konseps and attachments.
     pub async fn query_lemma(lemma: String, pool: &sqlx::Pool<Sqlite>) -> sqlx::Result<Vec<Self>> {
         sqlx::query_file_as!(
             Self,
@@ -51,7 +61,11 @@ impl LemmaWithKonsepView {
         .fetch_all(pool)
         .await
     }
+
+    /// Query all lemmas.
     pub async fn query_all(pool: &sqlx::Pool<Sqlite>) -> sqlx::Result<Vec<Self>> {
+        // TODO: Might be a good idea to add limit
+        // TODO: And maybe sort by reverse chronology
         sqlx::query_file_as!(
             Self,
             "transactions/select_lemma_with_konsep_view.sql",
