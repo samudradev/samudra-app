@@ -29,8 +29,8 @@ Reka bentuk dan reka fungsi aplikasi ini diinspirasikan daripada beberapa kamus 
 - [x] Memasukkan lemma beserta konsep, golongan kata, cakupan, dan kata asing.
 - [x] Dapatkan dan padam lemma.
 - [x] Sunting lemma dan konsep.
-- [ ] Sunting bahagian-bahagian lemma lain.
-- [ ] Padam bahagian-bahagian lemma.
+- [x] Sunting bahagian-bahagian lemma lain.
+- [x] Padam bahagian-bahagian lemma.
 - [ ] Import dari CSV (dalam pembaikan).
 - [x] Kongsi data dalam bentuk gambar.
 
