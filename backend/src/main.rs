@@ -10,12 +10,12 @@ mod menu;
 
 use appstate::AppConfig;
 use appstate::AppPaths;
-use database::io::interface::{Item, SubmitMod, FromView, SubmitItem};
+use database::data::LemmaItem;
+use database::io::interface::{FromView, Item, SubmitItem, SubmitMod};
 use database::states::Connection;
 use database::states::Counts;
 use database::views::LemmaWithKonsepView;
 use tauri::State;
-use database::data::LemmaItem;
 
 // TODO: Manage errors gracefully
 
@@ -169,7 +169,11 @@ async fn submit_changes(
     new: LemmaItem,
 ) -> Result<(), String> {
     let db = config.connection().await.pool;
-    old.modify_into(&new).unwrap().submit_mod(&db).await.unwrap();
+    old.modify_into(&new)
+        .unwrap()
+        .submit_mod(&db)
+        .await
+        .unwrap();
     Ok(())
 }
 
@@ -178,10 +182,15 @@ async fn submit_changes(
 async fn main() {
     let paths = appstate::AppPaths::default().initialize_root_dir();
     let config = appstate::AppConfig::from(&paths);
+    let appender = tracing_appender::rolling::never(".", "tracing.log");
+    let (non_blocking_appender, _guard) = tracing_appender::non_blocking(appender);
+    tracing_subscriber::fmt()
+        .with_writer(non_blocking_appender)
+        .init();
 
     tauri::Builder::default()
         .menu(menu::MenuBar::default().as_menu())
-        .on_menu_event(event::on_menu_event)
+		.on_menu_event(event::on_menu_event)
         .manage(paths)
         .manage(config)
         .invoke_handler(tauri::generate_handler![

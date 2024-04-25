@@ -1,6 +1,7 @@
 //! Connections to database
 
 use sqlx::migrate::MigrateDatabase;
+use sqlx::migrate::{MigrateError, Migrate};
 
 use crate::errors::Result;
 use crate::prelude::BackendError;
@@ -43,15 +44,13 @@ impl Connection {
     }
 
     /// Acquires a connection to the specified url.
-    ///
-    /// If exists, applies the migration to current version.
-    /// If not exist, applies [Self::create_and_migrate] to the same url.
+	///
+    /// If not exist, creates and applies [Self::create_and_migrate] to the same url.
     pub async fn from(url: String) -> Self {
         match sqlx::SqlitePool::connect(&url).await {
             Ok(pool) => {
                 // Automatically migrate to current version
-                sqlx::migrate!().run(&pool).await.expect("Migration error");
-                Self { pool }
+			Self{pool}
             }
             Err(_) => dbg!(Self::create_and_migrate(url)
                 .await
@@ -92,9 +91,16 @@ impl Connection {
     pub async fn create_and_migrate(url: String) -> Result<Self> {
         sqlx::Sqlite::create_database(&url).await?;
         let pool = sqlx::SqlitePool::connect(&url).await?;
-        sqlx::migrate!().run(&pool).await?;
-        Ok(Self { pool })
+        Ok(Self::migrate(pool).await)
     }
+	
+	async fn migrate(pool: Pool<Sqlite>) -> Self {
+		match sqlx::migrate!().run(&pool).await {
+			Ok(_) => {Self {pool}}
+			// Err(MigrateError::VersionMismatch(v)) => {println!("{}", v);  Self{pool}}
+			Err(e) => todo!("{}", e)
+		}
+	}
 
     /// Populates the database with presets to satisfy certain constrains.
     ///

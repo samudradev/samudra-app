@@ -30,6 +30,8 @@ futures = "0.3.28"
 toml = "0.7.6"
 chrono = { version = "0.4.26", features = ["serde"] }
 database = { path = "database", package = "database" }
+tracing-subscriber = "0.3.18"
+tracing-appender = "0.2.3"
 # async-trait = "0.1.73"
 
 # [[test]]

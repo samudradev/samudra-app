@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS cakupan_temp (
 
 INSERT INTO cakupan_temp SELECT * FROM cakupan;
 
-DROP cakupan;
+DROP TABLE cakupan;
 
 CREATE TABLE IF NOT EXISTS cakupan (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
