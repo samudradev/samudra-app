@@ -15,7 +15,17 @@ use database::io::interface::{FromView, Item, SubmitItem, SubmitMod};
 use database::states::Connection;
 use database::states::Counts;
 use database::views::LemmaWithKonsepView;
+use onc::phonotactics::tags::SyllableTags;
 use tauri::State;
+
+#[derive(serde::Deserialize, serde::Serialize)]
+#[serde(transparent)]
+struct PhonotacticToml(SyllableTags<String>);
+
+#[tauri::command]
+fn parse_phonotactic_toml(input: String) -> PhonotacticToml {
+    toml::from_str(&input).expect("Toml error")
+}
 
 // TODO: Manage errors gracefully
 
@@ -190,7 +200,7 @@ async fn main() {
 
     tauri::Builder::default()
         .menu(menu::MenuBar::default().as_menu())
-		.on_menu_event(event::on_menu_event)
+        .on_menu_event(event::on_menu_event)
         .manage(paths)
         .manage(config)
         .invoke_handler(tauri::generate_handler![
@@ -205,6 +215,7 @@ async fn main() {
             get_golongan_kata_enumeration,
             get_display_name,
             set_display_name,
+            parse_phonotactic_toml
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

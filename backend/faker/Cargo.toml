@@ -1,0 +1,13 @@
+[package]
+name = "faker"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+database = { version = "0.5.0", path = "../database" }
+onc = { git = "https://github.com/Thaza-Kun/bunyi-melayu.git", version = "0.2.1", features = ["serde", "faker"] }
+rand = "0.8.5"
+serde = { version = "1.0.203", features = ["derive"] }
+toml = "0.8.13"
