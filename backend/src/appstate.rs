@@ -1,10 +1,12 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::fs;
+use std::convert::Infallible;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
+use std::{fs, io};
 use tauri::api::path;
+use tauri::utils::config;
 
 pub use database::states::*;
 
@@ -43,112 +45,102 @@ impl DatabaseConfig {
 /// path = "root/storage/default/samudra.db"
 /// engine = "sqlite"
 /// ```
-#[derive(Serialize, Deserialize, Debug)]
-pub struct AppConfig {
-    display_name: Mutex<String>,
-    active: Mutex<String>,
-    databases: Mutex<HashMap<String, DatabaseConfig>>,
+#[derive(Serialize, Deserialize, Debug, Default)]
+pub struct AppConfigToml {
+    display_name: String,
+    active: String,
+    databases: HashMap<String, DatabaseConfig>,
 }
 
-impl From<&AppPaths> for AppConfig {
-    fn from(value: &AppPaths) -> Self {
-        match dbg!(value.databases_toml().exists()) {
-            true => {
-                let contents = match fs::read_to_string(value.databases_toml()) {
-                    Ok(c) => c,
-                    Err(e) => {
-                        todo!("LOW PRIORITY, {}", e)
-                    }
-                };
-                match toml::from_str(&contents) {
-                    Ok(c) => c,
-                    Err(e) => {
-                        std::fs::copy(
-                            value.databases_toml(),
-                            PathBuf::from_iter(vec![
-                                value.root.clone(),
-                                "databases.bak.toml".into(),
-                            ]),
-                        )
-                        .expect("Error occured while copying backup configuration.");
-                        println!("An error occured while reading `./databases.toml`. Please check `./databases.bak.toml`.\n{}", e);
-                        Self::fallback(value)
-                    }
-                }
-            }
-            false => Self::fallback(value),
-        }
+impl AppConfigToml {
+    pub fn read(value: &PathBuf) -> Result<Self, IoError> {
+        Ok(toml::from_str(&fs::read_to_string(value)?)?)
     }
+
+    pub fn write(&self, file: &PathBuf) -> Result<(), std::io::Error> {
+        let mut file_buf = fs::OpenOptions::new().write(true).create(true).open(file)?;
+        file_buf.write_all(toml::to_string_pretty(self).unwrap().as_bytes())?;
+        Ok(())
+    }
+
+    pub fn rewrite<F: FnMut(Self) -> Self>(path: &PathBuf, mut func: F) -> Result<(), IoError> {
+        func(Self::read(path)?).write(path)?;
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
+enum IoError {
+    Std(io::Error),
+    Toml(toml::de::Error),
+}
+
+impl From<toml::de::Error> for IoError {
+    fn from(value: toml::de::Error) -> Self {
+        IoError::Toml(value)
+    }
+}
+
+impl From<io::Error> for IoError {
+    fn from(value: io::Error) -> Self {
+        IoError::Std(value)
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct AppConfig {
+    pub paths: AppPaths,
 }
 
 impl AppConfig {
-    fn null() -> Self {
-        Self {
-            display_name: "DISPLAY_NAME_UNSET".to_string().into(),
-            active: "".to_string().into(),
-            databases: HashMap::new().into(),
-        }
+    pub fn new(paths: AppPaths) -> Self {
+        Self { paths }
+    }
+
+    fn get_config(&self) -> AppConfigToml {
+        AppConfigToml::read(&self.paths.databases_toml()).unwrap()
     }
 
     pub fn set_display_name(&self, name: String) {
-        *self.display_name.lock().unwrap() = name;
+        AppConfigToml::rewrite(&self.paths.databases_toml(), |mut conf| {
+            conf.display_name = name.clone();
+            conf
+        });
     }
     pub fn get_display_name(&self) -> String {
-        self.display_name.lock().unwrap().to_string()
+        self.get_config().display_name
     }
 
-    /// Sets the default value with the provided path.
-    pub fn fallback(paths: &AppPaths) -> AppConfig {
-        let conf = Self::null();
-        let _ = &conf
-            .register_database_and_set_active("default".into(), paths)
-            .unwrap();
-        conf
-    }
-
-    pub fn register_database_and_set_active(
-        &self,
-        name: String,
-        paths: &AppPaths,
-    ) -> Result<&Self, tauri::Error> {
-        Ok(self
-            .register_database(name.clone(), paths)
-            .set_active(name)
-            .to_toml(&paths.databases_toml())?)
+    pub fn get_active_database_url(&self) -> String {
+        let config = AppConfigToml::read(&self.paths.databases_toml()).unwrap();
+        config.databases.get(&config.active).unwrap().path.clone()
     }
 
     pub async fn connection(&self) -> Connection {
         Connection::from(self.get_active_database_url()).await
     }
 
-    pub fn get_active_database_url(&self) -> String {
-        let name = &self.active.lock().unwrap().to_string();
-        let hashmap = self.databases.lock().unwrap();
-        hashmap.get(&name.clone()).unwrap().path.clone()
+    pub fn register_database(&self, name: String, paths: &AppPaths) {
+        AppConfigToml::rewrite(&self.paths.databases_toml(), |mut config| {
+            config.databases.insert(
+                name.clone(),
+                DatabaseConfig::in_storage(name.clone(), paths),
+            );
+            config
+        });
     }
 
-    pub fn to_toml(&self, file: &Path) -> Result<&Self, std::io::Error> {
-        let mut file_buf = fs::OpenOptions::new().write(true).create(true).open(file)?;
-        file_buf.write_all(toml::to_string_pretty(self).unwrap().as_bytes())?;
-        Ok(self)
-    }
-
-    pub fn register_database(&self, name: String, paths: &AppPaths) -> &Self {
-        self.databases.lock().unwrap().insert(
-            name.clone(),
-            DatabaseConfig::in_storage(name.clone(), paths),
-        );
-        self
-    }
-
-    pub fn set_active(&self, name: String) -> &Self {
-        match self.databases.lock().unwrap().get(&name) {
-            Some(_database) => {
-                *self.active.lock().unwrap() = name;
-                self
+    pub fn set_active(&self, name: String) {
+        AppConfigToml::rewrite(&self.paths.databases_toml(), |mut config| {
+            match config.databases.get(&name) {
+                Some(_database) => {
+                    config.active = name.clone();
+                    config
+                }
+                None => panic!("Error while accessing the active name `{}`.", name),
             }
-            None => panic!("Error while accessing the active name `{}`.", name),
-        }
+        })
+        .unwrap();
     }
 }
 
@@ -163,17 +155,17 @@ impl Default for AppPaths {
 }
 
 impl AppPaths {
-    pub fn initialize_root_dir(self) -> Self {
-        if !&self.root.exists() {
-            std::fs::create_dir(&self.root).unwrap();
+    pub fn initialize_root_dir(&self) -> Result<(), io::Error> {
+        if !self.root.exists() {
+            std::fs::create_dir(self.root.clone())?;
         }
-        if !&self.storage_dir().exists() {
-            std::fs::create_dir(self.storage_dir()).unwrap();
+        if !self.storage_dir().exists() {
+            std::fs::create_dir(self.storage_dir())?;
         }
-        if !&self.export_dir().exists() {
-            std::fs::create_dir(self.export_dir()).unwrap();
+        if !self.export_dir().exists() {
+            std::fs::create_dir(self.export_dir())?;
         }
-        self
+        Ok(())
     }
     pub fn databases_toml(&self) -> PathBuf {
         PathBuf::from_iter([self.root.clone(), "databases.toml".into()])

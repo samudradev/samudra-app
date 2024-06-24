@@ -8,14 +8,24 @@ mod appstate;
 mod event;
 mod menu;
 
+use std::rc::Rc;
+
+use appbuild::DesktopApp;
 use appstate::AppConfig;
+use appstate::AppConfigToml;
 use appstate::AppPaths;
 use database::data::LemmaItem;
 use database::io::interface::{FromView, Item, SubmitItem, SubmitMod};
 use database::states::Connection;
 use database::states::Counts;
 use database::views::LemmaWithKonsepView;
+use menu::MenuBar;
 use onc::phonotactics::tags::SyllableTags;
+use tauri::plugin::TauriPlugin;
+use tauri::Assets;
+use tauri::Builder;
+use tauri::Manager;
+use tauri::Runtime;
 use tauri::State;
 
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -43,25 +53,18 @@ async fn get_display_name(config: State<'_, AppConfig>) -> Result<String, String
 
 /// Set display name for sharing
 #[tauri::command(async)]
-async fn set_display_name(
-    config: State<'_, AppConfig>,
-    paths: State<'_, AppPaths>,
-    name: String,
-) -> Result<(), String> {
+async fn set_display_name(config: State<'_, AppConfig>, name: String) -> Result<(), String> {
     config.set_display_name(name);
-    config
-        .to_toml(&paths.databases_toml())
-        .expect("Writing to toml failed");
     Ok(())
 }
 
 #[tauri::command(async)]
 async fn register_database_and_set_active(
-    paths: State<'_, AppPaths>,
     config: State<'_, AppConfig>,
     name: String,
 ) -> Result<String, tauri::Error> {
-    let config = config.register_database_and_set_active(name.clone(), &paths)?;
+    config.register_database(name.clone(), &config.paths);
+    config.set_active(name.clone());
     let url = config.get_active_database_url();
     let _ = Connection::create_and_migrate(url.clone())
         .await
@@ -187,11 +190,55 @@ async fn submit_changes(
     Ok(())
 }
 
+mod appbuild {
+    use tauri::{plugin::TauriPlugin, Manager, Runtime};
+
+    use crate::appstate::{self, AppConfig};
+
+    #[derive(Default)]
+    struct LifeCycle {
+        startup_fns: Vec<fn()>,
+        shutdown_fns: Vec<fn()>,
+        configure_fns: Vec<fn()>,
+    }
+
+    #[derive(Default)]
+    pub struct DesktopApp {
+        paths: appstate::AppPaths,
+        lifecycle: LifeCycle,
+    }
+
+    impl DesktopApp {
+        pub fn startup_with(mut self, on_startup: Vec<fn()>) -> Self {
+            self.lifecycle.startup_fns = on_startup;
+            self
+        }
+        pub fn shutdown_with(mut self, on_shutdown: Vec<fn()>) -> Self {
+            self.lifecycle.shutdown_fns = on_shutdown;
+            self
+        }
+        pub fn init<R: Runtime>(self) -> TauriPlugin<R> {
+            tauri::plugin::Builder::new("samudra-desktop")
+                .setup(move |app| {
+                    if !self.paths.root.exists() {
+                        self.paths.initialize_root_dir()?
+                    }
+                    self.lifecycle.startup_fns.iter().fold((), |_, f| f());
+                    app.manage(AppConfig::new(self.paths));
+                    app.manage(self.lifecycle);
+                    Ok(())
+                })
+                .on_drop(|app| {
+                    let cycle = app.state::<LifeCycle>();
+                    cycle.inner().shutdown_fns.iter().fold((), |_, f| f());
+                })
+                .build()
+        }
+    }
+}
 /// The entrypoint of this tauri app
 #[tokio::main]
 async fn main() {
-    let paths = appstate::AppPaths::default().initialize_root_dir();
-    let config = appstate::AppConfig::from(&paths);
     let appender = tracing_appender::rolling::never(".", "tracing.log");
     let (non_blocking_appender, _guard) = tracing_appender::non_blocking(appender);
     tracing_subscriber::fmt()
@@ -199,10 +246,10 @@ async fn main() {
         .init();
 
     tauri::Builder::default()
-        .menu(menu::MenuBar::default().as_menu())
+        .plugin(DesktopApp::default().init())
+        .manage(AppConfigToml::default())
+        .menu(MenuBar::default().into())
         .on_menu_event(event::on_menu_event)
-        .manage(paths)
-        .manage(config)
         .invoke_handler(tauri::generate_handler![
             get_lemma,
             active_database_url,
