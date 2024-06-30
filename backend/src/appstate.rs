@@ -1,14 +1,19 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::convert::Infallible;
+use std::hash::Hash;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use std::{fs, io};
+use tauri::api::dialog::blocking::MessageDialogBuilder;
+use tauri::api::dialog::MessageDialogKind;
 use tauri::api::path;
 use tauri::utils::config;
 
 pub use database::states::*;
+
+use crate::Dialog;
 
 #[derive(Debug)]
 pub struct AppPaths {
@@ -70,9 +75,63 @@ impl AppConfigToml {
 }
 
 #[derive(Debug)]
-enum IoError {
+pub enum IoError {
     Std(io::Error),
     Toml(toml::de::Error),
+    Unknown,
+}
+
+impl Eq for IoError {}
+
+impl PartialEq for IoError {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Std(l0), Self::Std(r0)) => dbg!(l0.raw_os_error() == r0.raw_os_error()),
+            (Self::Toml(l0), Self::Toml(r0)) => dbg!(l0.message() == r0.message()),
+            _ => core::mem::discriminant(self) == core::mem::discriminant(other),
+        }
+    }
+}
+
+impl Hash for IoError {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        match self {
+            IoError::Std(a) => a.raw_os_error().hash(state),
+            IoError::Toml(a) => a.message().hash(state),
+            IoError::Unknown => core::mem::discriminant(self).hash(state),
+        }
+    }
+}
+
+impl Dialog for IoError {
+    fn show(&self) {
+        print!("Show!");
+        match self {
+            IoError::Std(a) => {
+                if cfg!(windows) {
+                    match a.raw_os_error() {
+                        Some(362) => {
+                            let msg = ["The ${USERPATH}/Documents folder cannot be read.", 
+                                        "This happens when the ${USERPATH} is a OneDrive folder and OneDrive is not running.", 
+                                        "Try running OneDrive and restarting the application.", &format!("\n{}", a)].join("\n");
+                            MessageDialogBuilder::new(
+                                "On Cloud Documents Folder Error".to_string(),
+                                msg,
+                            )
+                            .kind(MessageDialogKind::Error)
+                            .show();
+                            panic!("{:?}", a)
+                        }
+                        _ => panic!("Windows OS: {:?}", a),
+                    }
+                } else {
+                    panic!("{:?}", a)
+                }
+            }
+            IoError::Toml(a) => panic!("{:?}", a),
+            IoError::Unknown => panic!("IoError::Unknown"),
+        }
+    }
 }
 
 impl From<toml::de::Error> for IoError {
@@ -97,8 +156,8 @@ impl AppConfig {
         Self { paths }
     }
 
-    fn get_config(&self) -> AppConfigToml {
-        AppConfigToml::read(&self.paths.databases_toml()).unwrap()
+    fn get_config(&self) -> Result<AppConfigToml, IoError> {
+        AppConfigToml::read(&self.paths.databases_toml())
     }
 
     pub fn set_display_name(&self, name: String) {
@@ -107,30 +166,35 @@ impl AppConfig {
             conf
         });
     }
-    pub fn get_display_name(&self) -> String {
-        self.get_config().display_name
+    pub fn get_display_name(&self) -> Result<String, IoError> {
+        Ok(self.get_config()?.display_name)
     }
 
-    pub fn get_active_database_url(&self) -> String {
-        let config = AppConfigToml::read(&self.paths.databases_toml()).unwrap();
-        config.databases.get(&config.active).unwrap().path.clone()
+    pub fn get_active_database_url(&self) -> Result<String, IoError> {
+        let config = self.get_config()?;
+        Ok(config
+            .databases
+            .get(&config.active)
+            .ok_or(IoError::Unknown)?
+            .path
+            .clone())
     }
 
-    pub async fn connection(&self) -> Connection {
-        Connection::from(self.get_active_database_url()).await
+    pub async fn connection(&self) -> Result<Connection, IoError> {
+        Ok(Connection::from(self.get_active_database_url()?).await)
     }
 
-    pub fn register_database(&self, name: String, paths: &AppPaths) {
+    pub fn register_database(&self, name: String, paths: &AppPaths) -> Result<(), IoError> {
         AppConfigToml::rewrite(&self.paths.databases_toml(), |mut config| {
             config.databases.insert(
                 name.clone(),
                 DatabaseConfig::in_storage(name.clone(), paths),
             );
             config
-        });
+        })
     }
 
-    pub fn set_active(&self, name: String) {
+    pub fn set_active(&self, name: String) -> Result<(), IoError> {
         AppConfigToml::rewrite(&self.paths.databases_toml(), |mut config| {
             match config.databases.get(&name) {
                 Some(_database) => {
@@ -140,7 +204,6 @@ impl AppConfig {
                 None => panic!("Error while accessing the active name `{}`.", name),
             }
         })
-        .unwrap();
     }
 }
 

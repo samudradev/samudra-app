@@ -8,12 +8,19 @@ mod appstate;
 mod event;
 mod menu;
 
+use std::borrow::Borrow;
+use std::borrow::BorrowMut;
+use std::collections::HashSet;
+use std::fmt::Debug;
+use std::hash::Hash;
 use std::rc::Rc;
+use std::sync::Mutex;
 
 use appbuild::DesktopApp;
 use appstate::AppConfig;
 use appstate::AppConfigToml;
 use appstate::AppPaths;
+use appstate::IoError;
 use database::data::LemmaItem;
 use database::io::interface::{FromView, Item, SubmitItem, SubmitMod};
 use database::states::Connection;
@@ -28,27 +35,39 @@ use tauri::Manager;
 use tauri::Runtime;
 use tauri::State;
 
-#[derive(serde::Deserialize, serde::Serialize)]
-#[serde(transparent)]
-struct PhonotacticToml(SyllableTags<String>);
+// #[derive(serde::Deserialize, serde::Serialize)]
+// #[serde(transparent)]
+// struct PhonotacticToml(SyllableTags<String>);
 
-#[tauri::command]
-fn parse_phonotactic_toml(input: String) -> PhonotacticToml {
-    toml::from_str(&input).expect("Toml error")
-}
+// #[tauri::command]
+// fn parse_phonotactic_toml(input: String) -> PhonotacticToml {
+//     toml::from_str(&input).expect("Toml error")
+// }
 
 // TODO: Manage errors gracefully
 
 /// Exposes the active database URL to the frontend.
 #[tauri::command(async)]
 async fn active_database_url(config: State<'_, AppConfig>) -> Result<String, String> {
-    Ok(config.get_active_database_url())
+    Ok(match config.get_active_database_url() {
+        Ok(a) => a,
+        Err(e) => {
+            e.show();
+            Default::default()
+        }
+    })
 }
 
 /// Display name for sharing
 #[tauri::command(async)]
 async fn get_display_name(config: State<'_, AppConfig>) -> Result<String, String> {
-    Ok(config.get_display_name())
+    Ok(match config.get_display_name() {
+        Ok(a) => a,
+        Err(e) => {
+            e.show();
+            Default::default()
+        }
+    })
 }
 
 /// Set display name for sharing
@@ -65,7 +84,7 @@ async fn register_database_and_set_active(
 ) -> Result<String, tauri::Error> {
     config.register_database(name.clone(), &config.paths);
     config.set_active(name.clone());
-    let url = config.get_active_database_url();
+    let url = config.get_active_database_url().unwrap();
     let _ = Connection::create_and_migrate(url.clone())
         .await
         .expect("Error migrating");
@@ -73,8 +92,15 @@ async fn register_database_and_set_active(
 }
 
 #[tauri::command(async)]
-async fn count_items(config: State<'_, AppConfig>) -> Result<Counts, String> {
-    Ok(config.connection().await.statistics().await.unwrap())
+async fn count_items(config: State<'_, AppConfig>) -> Result<Counts, ()> {
+    Ok(match config.connection().await {
+        Ok(a) => a.statistics().await.unwrap(),
+        Err(e) => {
+            e.show();
+            Counts::default()
+        }
+    })
+    // Ok(config.connection().await.statistics().await.unwrap())
 }
 
 /// Returns all golongan_katas from the table
@@ -85,6 +111,7 @@ async fn get_golongan_kata_enumeration(
     let mut res = config
         .connection()
         .await
+        .unwrap()
         .get_golongan_kata_enumeration()
         .await
         .unwrap();
@@ -92,6 +119,7 @@ async fn get_golongan_kata_enumeration(
         res = config
             .connection()
             .await
+            .unwrap()
             .populate_with_presets()
             .await
             .expect("Error Populating preset")
@@ -108,7 +136,7 @@ async fn get_golongan_kata_enumeration(
 /// Insert single value
 #[tauri::command(async)]
 async fn insert_lemma(config: State<'_, AppConfig>, item: LemmaItem) -> Result<(), String> {
-    let conn = config.connection().await.pool;
+    let conn = config.connection().await.unwrap().pool;
     item.submit_full(&conn).await.unwrap();
     Ok(())
 }
@@ -116,7 +144,7 @@ async fn insert_lemma(config: State<'_, AppConfig>, item: LemmaItem) -> Result<(
 /// Delete single lemma
 #[tauri::command(async)]
 async fn delete_lemma(config: State<'_, AppConfig>, item: LemmaItem) -> Result<(), String> {
-    let conn = config.connection().await.pool;
+    let conn = config.connection().await.unwrap().pool;
     item.submit_partial_removal(&conn).await.unwrap();
     Ok(())
 }
@@ -163,7 +191,7 @@ async fn import_from_csv(_config: State<'_, AppConfig>, _path: String) -> Result
 /// Get a vector of [`LemmaItem`] that matches the argument.
 #[tauri::command(async)]
 async fn get_lemma(config: State<'_, AppConfig>, lemma: &str) -> Result<Vec<LemmaItem>, String> {
-    let conn = config.connection().await.pool;
+    let conn = config.connection().await.unwrap().pool;
     let views = if lemma.is_empty() {
         LemmaWithKonsepView::query_all(&conn).await.unwrap()
     } else {
@@ -180,8 +208,8 @@ async fn submit_changes(
     config: State<'_, AppConfig>,
     old: LemmaItem,
     new: LemmaItem,
-) -> Result<(), String> {
-    let db = config.connection().await.pool;
+) -> Result<(), ()> {
+    let db = config.connection().await.unwrap().pool;
     old.modify_into(&new)
         .unwrap()
         .submit_mod(&db)
@@ -236,6 +264,11 @@ mod appbuild {
         }
     }
 }
+
+pub trait Dialog {
+    fn show(&self);
+}
+
 /// The entrypoint of this tauri app
 #[tokio::main]
 async fn main() {
@@ -262,7 +295,7 @@ async fn main() {
             get_golongan_kata_enumeration,
             get_display_name,
             set_display_name,
-            parse_phonotactic_toml
+            // parse_phonotactic_toml
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
