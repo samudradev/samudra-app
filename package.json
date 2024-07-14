@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json",
-    "tauri": "tauri",
+    "tauri": "cargo tauri",
     "test": "cargo test --manifest-path ./src-tauri/Cargo.toml --workspace",
     "watch": "cargo  watch -x \"test --workspace\" -C src-tauri/ -c",
     "setup-db": "sqlx database setup --database-url sqlite:src-tauri/.samudra-check.db --source src-tauri/database/migrations"
@@ -25,7 +25,6 @@
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^2.4.2",
-    "@tauri-apps/cli": "^1.4.0",
     "@tsconfig/svelte": "^5.0.0",
     "@types/node": "^20.8.4",
     "svelte": "^4.0.5",
