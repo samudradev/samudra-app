@@ -24,7 +24,7 @@ use crate::io::interface::IntoViewMap;
 /// ```
 /// will bind "lemma_1" to following query and calls it:
 ///```sql
-#[doc = include_str!("../transactions/select_lemma_with_konsep_view.sql")]
+#[doc = include_str!("../transactions/select_lemma_in_konsep_view.sql")]
 ///```
 #[derive(Debug, Clone, sqlx::FromRow, Default)]
 pub struct LemmaWithKonsepView {
@@ -65,10 +65,38 @@ impl LemmaWithKonsepView {
         lemma: String,
         pool: &sqlx::Pool<<Self as crate::io::interface::View>::SOURCE>,
     ) -> sqlx::Result<Vec<Self>> {
+        sqlx::query_file_as!(Self, "transactions/select_lemma_in_konsep_view.sql", lemma)
+            .fetch_all(pool)
+            .await
+    }
+
+    /// Query a single lemma using golongan kata with its associated konseps and attachments.
+    pub async fn query_lemma_with_golongan_kata(
+        lemma: Option<String>,
+        golongan_kata: String,
+        pool: &sqlx::Pool<<Self as crate::io::interface::View>::SOURCE>,
+    ) -> sqlx::Result<Vec<Self>> {
         sqlx::query_file_as!(
             Self,
-            "transactions/select_lemma_with_konsep_view.sql",
-            lemma
+            "transactions/select_lemma_with_golongan_kata_in_konsep_view.sql",
+            lemma,
+            golongan_kata
+        )
+        .fetch_all(pool)
+        .await
+    }
+
+    /// Query a single lemma using golongan kata with its associated konseps and attachments.
+    pub async fn query_lemma_with_cakupan(
+        lemma: Option<String>,
+        cakupan: String,
+        pool: &sqlx::Pool<<Self as crate::io::interface::View>::SOURCE>,
+    ) -> sqlx::Result<Vec<Self>> {
+        sqlx::query_file_as!(
+            Self,
+            "transactions/select_lemma_with_cakupan_in_konsep_view.sql",
+            lemma,
+            cakupan
         )
         .fetch_all(pool)
         .await
@@ -82,7 +110,7 @@ impl LemmaWithKonsepView {
         // TODO: And maybe sort by reverse chronology
         sqlx::query_file_as!(
             Self,
-            "transactions/select_lemma_with_konsep_view.sql",
+            "transactions/select_lemma_in_konsep_view.sql",
             None::<String>
         )
         .fetch_all(pool)
