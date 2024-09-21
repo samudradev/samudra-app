@@ -1,5 +1,7 @@
 //! A module that contains definition of structs implementing [View].
 
+pub mod lists;
+
 use std::collections::HashMap;
 
 use itertools::Itertools;
@@ -86,7 +88,7 @@ impl LemmaWithKonsepView {
         .await
     }
 
-    /// Query a single lemma using golongan kata with its associated konseps and attachments.
+    /// Query a single lemma using cakupan with its associated konseps and attachments.
     pub async fn query_lemma_with_cakupan(
         lemma: Option<String>,
         cakupan: String,
@@ -97,6 +99,24 @@ impl LemmaWithKonsepView {
             "transactions/select_lemma_with_cakupan_in_konsep_view.sql",
             lemma,
             cakupan
+        )
+        .fetch_all(pool)
+        .await
+    }
+
+    /// Query a single lemma using kata asing with its associated konseps and attachments.
+    pub async fn query_lemma_with_kata_asing(
+        lemma: Option<String>,
+        kata_asing: Option<String>,
+        bahasa: Option<String>,
+        pool: &sqlx::Pool<<Self as crate::io::interface::View>::SOURCE>,
+    ) -> sqlx::Result<Vec<Self>> {
+        sqlx::query_file_as!(
+            Self,
+            "transactions/select_lemma_with_kata_asing_in_konsep_view.sql",
+            lemma,
+            kata_asing,
+            bahasa
         )
         .fetch_all(pool)
         .await
@@ -136,123 +156,3 @@ impl IntoViewMap<LemmaWithKonsepView> for Vec<LemmaWithKonsepView> {
             .collect()
     }
 }
-// #[cfg(test)]
-// mod test {
-//     use super::*;
-//
-//     #[sqlx::test(fixtures("lemma", "lemma_2"))]
-//     fn test_lemma_w_konsep_view(pool: sqlx::Pool<sqlx::Sqlite>) {
-//         let views: Vec<LemmaWithKonsepView> = LemmaWithKonsepView::query_all(&pool).await.unwrap();
-//         let mut data = dbg!(LemmaItem::from_views(&views)
-//             .into_iter()
-//             .sorted_by(|a, b| a.lemma.cmp(&b.lemma)));
-//         assert_eq!(
-//             data.next().unwrap(),
-//             LemmaItem {
-//                 id: DbProvided::Known(1),
-//                 lemma: "cakera tokokan".into(),
-//                 konseps: vec![KonsepItem {
-//                     id: DbProvided::Known(1),
-//                     keterangan: "gas-gas dan debu yang mengelilingi lohong hitam".into(),
-//                     golongan_kata: "kata nama".into(),
-//                     cakupans: vec!["Teori Relativiti".into(), "Astrofizik".into(),],
-//                     kata_asing: vec![KataAsingItem {
-//                         nama: "accretion disk".into(),
-//                         bahasa: "english".into(),
-//                     }],
-//                 },],
-//             },
-//         );
-//         assert_eq!(
-//             data.next().unwrap(),
-//             LemmaItem {
-//                 id: DbProvided::Known(2),
-//                 lemma: "ufuk peristiwa".into(),
-//                 konseps: vec![KonsepItem {
-//                     id: DbProvided::Known(2),
-//                     keterangan: "sempadan terluar lohong hitam".into(),
-//                     golongan_kata: "kata nama".into(),
-//                     cakupans: vec!["Teori Relativiti".into(), "Astrofizik".into(),],
-//                     kata_asing: vec![KataAsingItem {
-//                         nama: "event horizon".into(),
-//                         bahasa: "english".into(),
-//                     }],
-//                 },],
-//             }
-//         );
-//     }
-//
-//     #[sqlx::test(fixtures("lemma", "lemma_2"))]
-//     fn test_lemma_w_empty_konsep_query_view(pool: sqlx::Pool<sqlx::Sqlite>) {
-//         let views: Vec<LemmaWithKonsepView> =
-//             LemmaWithKonsepView::query_lemma("cakera tokokan".into(), &pool)
-//                 .await
-//                 .unwrap();
-//         let mut data = dbg!(LemmaItem::from_views(&views)
-//             .into_iter()
-//             .sorted_by(|a, b| a.lemma.cmp(&b.lemma)));
-//         assert_eq!(
-//             data.next(),
-//             Some(LemmaItem {
-//                 id: DbProvided::Known(1),
-//                 lemma: "cakera tokokan".into(),
-//                 konseps: vec![KonsepItem {
-//                     id: DbProvided::Known(1),
-//                     keterangan: "gas-gas dan debu yang mengelilingi lohong hitam".into(),
-//                     golongan_kata: "kata nama".into(),
-//                     cakupans: vec!["Astrofizik".into(), "Teori Relativiti".into(),],
-//                     kata_asing: vec![KataAsingItem {
-//                         nama: "accretion disk".into(),
-//                         bahasa: "english".into(),
-//                     }],
-//                 },],
-//             }),
-//         );
-//     }
-//
-//     #[sqlx::test(fixtures("defaults"))]
-//     fn test_lemma_w_empty_kata_asing(pool: sqlx::Pool<sqlx::Sqlite>) {
-//         let mut item = LemmaItem {
-//             id: DbProvided::Unknown,
-//             lemma: "cakera tokokan".into(),
-//             konseps: vec![KonsepItem {
-//                 id: DbProvided::Unknown,
-//                 keterangan: "gas-gas dan debu yang mengelilingi lohong hitam".into(),
-//                 golongan_kata: "kata nama".into(),
-//                 cakupans: vec!["Astrofizik".into(), "Teori Relativiti".into()],
-//                 kata_asing: vec![],
-//             }],
-//         };
-//         let _ = item.clone().insert_safe(&pool).await.unwrap();
-//         let views: Vec<LemmaWithKonsepView> = LemmaWithKonsepView::query_all(&pool).await.unwrap();
-//         let data = LemmaItem::from_views(&views);
-//         item.id = DbProvided::Known(1);
-//         let k = item.konseps.first_mut().unwrap();
-//         k.id = DbProvided::Known(1);
-//         assert_eq!(data.iter().next(), Some(&item),);
-//     }
-//     #[sqlx::test(fixtures("defaults"))]
-//     fn test_lemma_w_empty_cakupan(pool: sqlx::Pool<sqlx::Sqlite>) {
-//         let mut item = LemmaItem {
-//             id: DbProvided::Unknown,
-//             lemma: "cakera tokokan".into(),
-//             konseps: vec![KonsepItem {
-//                 id: DbProvided::Unknown,
-//                 keterangan: "gas-gas dan debu yang mengelilingi lohong hitam".into(),
-//                 golongan_kata: "kata nama".into(),
-//                 cakupans: vec![],
-//                 kata_asing: vec![KataAsingItem {
-//                     nama: "accretion disk".into(),
-//                     bahasa: "english".into(),
-//                 }],
-//             }],
-//         };
-//         let _ = item.clone().insert_safe(&pool).await.unwrap();
-//         let views: Vec<LemmaWithKonsepView> = LemmaWithKonsepView::query_all(&pool).await.unwrap();
-//         let data = LemmaItem::from_views(&views);
-//         item.id = DbProvided::Known(1);
-//         let k = item.konseps.first_mut().unwrap();
-//         k.id = DbProvided::Known(1);
-//         assert_eq!(data.iter().next(), Some(&item),);
-//     }
-// }
